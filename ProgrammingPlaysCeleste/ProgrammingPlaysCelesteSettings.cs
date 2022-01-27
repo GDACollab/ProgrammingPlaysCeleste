@@ -10,16 +10,26 @@ using static Celeste.TextMenu;
 namespace ProgrammingPlaysCeleste
 {
     [SettingName("modoptions_programmingplaysceleste_title")]
-    class ProgrammingPlaysCelesteSettings : EverestModuleSettings
+    public class ProgrammingPlaysCelesteSettings : EverestModuleSettings
     {
+        [SettingRange(1, 10)]
         public int NumberOfInputDivisions { get; set; } = 2;
-        public void CreateInputDivisionEntry(TextMenu menu, bool inGame) {
-            Option<string> divisions = new Option<string>("Input Divisions");
+        public void CreateInputDivisionEntry(TextMenu menu, bool inGame)
+        {
+            Logger.Log("Programming Plays Celeste", "?A?A?>WEFDSAJKFLSDKJFLKSDFJLOSDKFJLDS");
             for (int i = 0; i < NumberOfInputDivisions; i++) {
-                divisions.Add("Inputs allowed for #" + i, "LRUDJCZ");
-                divisions.Add("Folder name for #" + i, i.ToString());
+                Logger.Log("Programming Plays Celeste", "?A?A?>");
+                Setting inputsAllowed = new Setting("Inputs allowed for #" + i, "LRUDJCZ");
+                Setting folderName = new Setting("Folder name for #" + i, i.ToString());
+                menu.Add(inputsAllowed);
+                menu.Add(folderName);
             }
-            menu.Add(divisions);
         }
+
+        #region Test
+
+        public bool TestExample { get; set; } = false;
+
+        #endregion
     }
 }

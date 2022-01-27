@@ -4,6 +4,7 @@ using Celeste;
 using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
+using System;
 
 namespace ProgrammingPlaysCeleste
 {
@@ -19,6 +20,15 @@ namespace ProgrammingPlaysCeleste
 
     public class ProgramCeleste : EverestModule
     {
+        public static ProgramCeleste Instance;
+
+        public ProgramCeleste() {
+            Instance = this;
+        }
+
+        public override Type SettingsType => typeof(ProgrammingPlaysCelesteSettings);
+        public static ProgrammingPlaysCelesteSettings Settings => (ProgrammingPlaysCelesteSettings) Instance._Settings;
+
         static Process movementScripts;
 
         HashSet<Inputs> activeInputs;
