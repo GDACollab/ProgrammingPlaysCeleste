@@ -5,6 +5,7 @@ using Monocle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,10 +16,19 @@ namespace ProgrammingPlaysCeleste
     {
         static GamePadState activeState;
 
+        private delegate void UpdateVirtualInputs();
+
+        private static readonly UpdateVirtualInputs UpdateInputs;
+
+        static InputManager() {
+            MethodInfo updateInputs = typeof(MInput).GetMethod("UpdateVirtualInputs", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            UpdateInputs = (UpdateVirtualInputs) updateInputs.CreateDelegate(typeof(UpdateVirtualInputs));
+        }
+
         public static void SendFrameInput(string input) {
             GamePadDPad pad = default;
             GamePadThumbSticks sticks = new GamePadThumbSticks(new Vector2(1.0f, 1.0f), new Vector2(1.0f, 1.0f));
-            activeState = new GamePadState(sticks, new GamePadTriggers(0, 0), new GamePadButtons(), pad);
+            activeState = new GamePadState(sticks, default, default, pad);
             // Celeste controls:
             // A - Jump
             // X - Dash
@@ -42,6 +52,8 @@ namespace ProgrammingPlaysCeleste
                 MInput.GamePads[0].CurrentState = activeState;
                 MInput.GamePads[0].Attached = true;
             }
+
+            UpdateInputs();
         }
     }
 }

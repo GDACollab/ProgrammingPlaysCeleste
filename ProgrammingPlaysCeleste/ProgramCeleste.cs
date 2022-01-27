@@ -15,7 +15,6 @@ namespace ProgrammingPlaysCeleste
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
             On.Monocle.MInput.Update += UpdateInput;
-            IL.Monocle.MInput.Update += ILUpdate;
 
             movementScripts = Process.Start(new ProcessStartInfo("python", @"./Mods/ProgrammingPlaysCeleste/main.py") {
                 UseShellExecute = false,
@@ -36,7 +35,15 @@ namespace ProgrammingPlaysCeleste
         }
 
         private static void UpdateInput(On.Monocle.MInput.orig_Update orig) {
-            InputManager.SendFrameInput(activeInput);
+            if (Engine.Instance.IsActive) {
+                orig();
+            }
+
+            if (activeInput != "")
+            {
+                Logger.Log("Programming Plays Celeste", "INPUT");
+                InputManager.SendFrameInput(activeInput);
+            }
         }
 
         private static void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
