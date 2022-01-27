@@ -1,0 +1,6 @@
+- Name: Programming Plays Celeste
+  Version: 1.0.0
+  DLL: ProgrammingPlaysCeleste.dll
+  Dependencies:
+    - Name: Everest
+      Version: 1.3025
