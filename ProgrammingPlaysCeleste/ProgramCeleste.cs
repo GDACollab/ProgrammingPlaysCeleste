@@ -41,13 +41,11 @@ namespace ProgrammingPlaysCeleste
 
             if (activeInput != "")
             {
-                Logger.Log("Programming Plays Celeste", "INPUT");
                 InputManager.SendFrameInput(activeInput);
             }
         }
 
         private static void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
-            Logger.Log("Programming Plays Celeste", MInput.GamePads[0].CurrentState.ThumbSticks.Left.ToString());
             if (Engine.Scene is Level level)
             {
                 GameReader.FrameUpdate(level);

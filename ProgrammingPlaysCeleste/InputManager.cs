@@ -27,15 +27,13 @@ namespace ProgrammingPlaysCeleste
 
         public static void SendFrameInput(string input) {
             GamePadDPad pad = default;
-            GamePadThumbSticks sticks = new GamePadThumbSticks(new Vector2(1.0f, 1.0f), new Vector2(1.0f, 1.0f));
+            GamePadThumbSticks sticks = new GamePadThumbSticks(new Vector2(1.0f, 1.0f), new Vector2(0.0f, 0.0f));
             activeState = new GamePadState(sticks, default, default, pad);
             // Celeste controls:
             // A - Jump
             // X - Dash
             // Right Trigger - Climb
             // Left Stick - Move
-            //KeyboardState keyboard = new KeyboardState(Keys.Right);
-            //MInput.Keyboard.CurrentState = keyboard;
             bool found = false;
             for (int i = 0; i < 4; i++)
             {
