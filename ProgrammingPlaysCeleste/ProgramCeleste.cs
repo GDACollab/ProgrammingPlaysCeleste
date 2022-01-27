@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
 using Microsoft.Xna.Framework;
@@ -6,11 +7,21 @@ using Monocle;
 
 namespace ProgrammingPlaysCeleste
 {
+    public enum Inputs { 
+        Left,
+        Right,
+        Up,
+        Down,
+        Jump,
+        Dash,
+        Climb
+    }
+
     public class ProgramCeleste : EverestModule
     {
         static Process movementScripts;
 
-        static string activeInput;
+        HashSet<Inputs> activeInputs;
 
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
@@ -23,7 +34,7 @@ namespace ProgrammingPlaysCeleste
                 CreateNoWindow = true
             });
 
-            activeInput = "";
+            activeInputs = new HashSet<Inputs>();
         }
 
         public override void Unload()
@@ -34,18 +45,49 @@ namespace ProgrammingPlaysCeleste
             movementScripts.Kill();
         }
 
-        private static void UpdateInput(On.Monocle.MInput.orig_Update orig) {
+        private void UpdateInput(On.Monocle.MInput.orig_Update orig) {
             if (Engine.Instance.IsActive) {
                 orig();
             }
 
-            if (activeInput != "")
+            if (activeInputs.Count > 0)
             {
-                InputManager.SendFrameInput(activeInput);
+                InputManager.SendFrameInput(activeInputs);
             }
         }
 
-        private static void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
+        private void StringToInput(string input) {
+            foreach (char item in input) {
+                switch (item) {
+                    case 'L':
+                        activeInputs.Add(Inputs.Left);
+                        break;
+                    case 'R':
+                        activeInputs.Add(Inputs.Right);
+                        break;
+                    case 'U':
+                        activeInputs.Add(Inputs.Up);
+                        break;
+                    case 'D':
+                        activeInputs.Add(Inputs.Down);
+                        break;
+                    case 'J':
+                        activeInputs.Add(Inputs.Jump);
+                        break;
+                    case 'C':
+                        activeInputs.Add(Inputs.Climb);
+                        break;
+                    case 'Z':
+                        activeInputs.Add(Inputs.Dash);
+                        break;
+                    default:
+                        Logger.Log("Programming Plays Celeste", "Unrecognized input char: " + input);
+                        break;
+                }
+            }
+        }
+
+        private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
             if (Engine.Scene is Level level)
             {
                 GameReader.FrameUpdate(level);
@@ -55,7 +97,7 @@ namespace ProgrammingPlaysCeleste
                 if (!movementScripts.StandardOutput.EndOfStream) {
                     string input = movementScripts.StandardOutput.ReadLine();
                     Logger.Log("Programming Plays Celeste", "Input: " + input + "(length: " + input.Length + ")");
-                    activeInput = input;
+                    StringToInput(input);
                     orig(self, gameTime);
                 }
             }
