@@ -70,7 +70,7 @@ namespace ProgrammingPlaysCeleste
             base.CreateModMenuSection(menu, inGame, snapshot);
 
             TextMenu.Slider numDivisions = new TextMenu.Slider("Number of Input Divisions", (number) => { return number.ToString(); }, 1, 10);
-            numDivisions.Index = Settings.NumberOfInputDivisions;
+            numDivisions.Index = (Settings.NumberOfInputDivisions - 1);
             menu.Add(numDivisions);
 
             // 2 buttons * 10 total input divisions.
