@@ -18,20 +18,34 @@ namespace ProgrammingPlaysCeleste
         Climb
     }
 
-    public class ProgramCeleste : EverestModule
+    public class ProgramCelesteModule : EverestModule
     {
-        public static ProgramCeleste Instance;
+        public static ProgramCelesteModule Instance;
 
-        public ProgramCeleste() {
+        public ProgramCelesteModule() {
             Instance = this;
         }
 
-        public override Type SettingsType => typeof(ProgrammingPlaysCelesteSettings);
-        public static ProgrammingPlaysCelesteSettings Settings => (ProgrammingPlaysCelesteSettings) Instance._Settings;
+        public override Type SettingsType => typeof(ProgramCelesteModuleSettings);
+        public static ProgramCelesteModuleSettings Settings => (ProgramCelesteModuleSettings) Instance._Settings;
 
         static Process movementScripts;
 
         HashSet<Inputs> activeInputs;
+
+        // Because for some reason I can't use Create[PropName]Entry in CelesteModuleSettings.cs, we're using this hacky workaround:
+        public override void CreateModMenuSection(TextMenu menu, bool inGame, FMOD.Studio.EventInstance snapshot)
+        {
+            base.CreateModMenuSection(menu, inGame, snapshot);
+            ProgramCelesteModuleSettings settings = ProgramCelesteModuleSettings.Instance;
+            for (int i = 0; i < settings.NumberOfInputDivisions; i++)
+            {
+                TextMenu.Setting inputsAllowed = new TextMenu.Setting("Inputs allowed for #" + i, "LRUDJCZ");
+                TextMenu.Setting folderName = new TextMenu.Setting("Folder name for #" + i, i.ToString());
+                menu.Add(inputsAllowed);
+                menu.Add(folderName);
+            }
+        }
 
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
