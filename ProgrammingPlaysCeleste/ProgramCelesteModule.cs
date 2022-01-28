@@ -120,6 +120,7 @@ namespace ProgrammingPlaysCeleste
 
         private void StringToInput(string input) {
             activeInputs.Clear();
+            string printStr = "";
             foreach (char item in input) {
                 switch (item) {
                     case 'L':
@@ -144,9 +145,10 @@ namespace ProgrammingPlaysCeleste
                         activeInputs.Add(Inputs.Dash);
                         break;
                     default:
-                        Logger.Log("Programming Plays Celeste", "Unrecognized input char: " + input);
+                        printStr += item;
                         break;
                 }
+                Logger.Log("Programming Plays Celeste", printStr);
             }
         }
 
