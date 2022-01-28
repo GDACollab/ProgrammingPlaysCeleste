@@ -107,7 +107,8 @@ namespace ProgrammingPlaysCeleste
         }
 
         private void UpdateInput(On.Monocle.MInput.orig_Update orig) {
-            if (Engine.Instance.IsActive) {
+            if (Engine.Instance.IsActive)
+            {
                 orig();
             }
 
@@ -118,6 +119,7 @@ namespace ProgrammingPlaysCeleste
         }
 
         private void StringToInput(string input) {
+            activeInputs.Clear();
             foreach (char item in input) {
                 switch (item) {
                     case 'L':
