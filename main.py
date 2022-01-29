@@ -48,10 +48,10 @@ for i in range(len(divisions_arr)):
         selected_script = parser["Script Selection"][item[1]]
         print(selected_script)
         if selected_script == "Random":
-            scripts = glob.glob(item[1] + '/*.py')
+            scripts = glob.glob('/code/' + item[1] + '/*.py')
             if len(scripts) > 0:
                 selected_script = scripts[random.randint(0, len(scripts))]
-                script = "./" + item[1] + "/" + selected_script
+                script = "./code/" + item[1] + "/" + selected_script
         else:
             script = "./" + item[1] + "/" + selected_script
         spec = importlib.util.spec_from_file_location(selected_script, script)
