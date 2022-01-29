@@ -106,7 +106,8 @@ namespace ProgrammingPlaysCeleste
                     string input = movementScripts.StandardOutput.ReadLine();
                     currentInputs += input;
                     if (currentInputs.Contains("--END OF INPUT STRING--")) {
-                        StringToInput(input);
+                        currentInputs.Replace("--END OF INPUT STRING--", "");
+                        StringToInput(currentInputs);
                         currentInputs = "";
                         orig(self, gameTime);
                     }
