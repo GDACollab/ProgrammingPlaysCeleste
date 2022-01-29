@@ -34,6 +34,8 @@ namespace ProgrammingPlaysCeleste
 
         HashSet<Inputs> activeInputs;
 
+        static string currentInputs = "";
+
         private void DrawInputDivisions(TextMenu menu, ref TextMenu.Item[] inputDivisions) {
             for (int i = 0; i < 10; i++)
             {
@@ -92,7 +94,7 @@ namespace ProgrammingPlaysCeleste
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
-                CreateNoWindow = true
+                CreateNoWindow = false
             });
 
             activeInputs = new HashSet<Inputs>();
@@ -103,7 +105,7 @@ namespace ProgrammingPlaysCeleste
             On.Monocle.Engine.Update -= UpdateGame;
             On.Monocle.MInput.Update -= UpdateInput;
 
-            movementScripts.Kill();
+            movementScripts.StandardInput.Write("FINISHED");
         }
 
         private void UpdateInput(On.Monocle.MInput.orig_Update orig) {
@@ -148,7 +150,7 @@ namespace ProgrammingPlaysCeleste
                         printStr += item;
                         break;
                 }
-                Logger.Log("Programming Plays Celeste", printStr);
+                Logger.Log("Programming Plays Celeste", "Full String: " + input + "\nUnidentified Inputs:" + printStr);
             }
         }
 
@@ -161,9 +163,12 @@ namespace ProgrammingPlaysCeleste
 
                 if (!movementScripts.StandardOutput.EndOfStream) {
                     string input = movementScripts.StandardOutput.ReadLine();
-                    Logger.Log("Programming Plays Celeste", "Input: " + input + "(length: " + input.Length + ")");
-                    StringToInput(input);
-                    orig(self, gameTime);
+                    currentInputs += input;
+                    if (currentInputs.Contains("--END OF INPUT STRING--")) {
+                        StringToInput(input);
+                        currentInputs = "";
+                        orig(self, gameTime);
+                    }
                 }
             }
             else {
