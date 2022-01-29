@@ -91,8 +91,8 @@ namespace ProgrammingPlaysCeleste
                         printStr += item;
                         break;
                 }
-                Logger.Log("Programming Plays Celeste", "Full String: " + input + "\nUnidentified Inputs:" + printStr);
             }
+            Logger.Log("Programming Plays Celeste", "Full String: " + input + "\nUnidentified Inputs:" + printStr);
         }
 
         private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
@@ -106,7 +106,7 @@ namespace ProgrammingPlaysCeleste
                     string input = movementScripts.StandardOutput.ReadLine();
                     currentInputs += input;
                     if (currentInputs.Contains("--END OF INPUT STRING--")) {
-                        currentInputs.Replace("--END OF INPUT STRING--", "");
+                        currentInputs = currentInputs.Replace("--END OF INPUT STRING--", "");
                         StringToInput(currentInputs);
                         currentInputs = "";
                         orig(self, gameTime);
