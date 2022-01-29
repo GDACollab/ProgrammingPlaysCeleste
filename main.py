@@ -46,26 +46,28 @@ for i in range(len(divisions_arr)):
     item = divisions_arr[i]
     if len(item) == 2 and item[1] in parser["Script Selection"]:
         selected_script = parser["Script Selection"][item[1]]
-        print(selected_script)
+        script_path = ""
         if selected_script == "Random":
-            scripts = glob.glob('/code/' + item[1] + '/*.py')
+            scripts = glob.glob('.\\code\\' + item[1] + '/*.py')
             if len(scripts) > 0:
-                selected_script = scripts[random.randint(0, len(scripts))]
-                script = "./code/" + item[1] + "/" + selected_script
+                selected_script = scripts[random.randint(0, len(scripts) - 1)]
+                script_path = selected_script
+                selected_script = os.path.basename(selected_script)
         else:
-            script = "./" + item[1] + "/" + selected_script
-        spec = importlib.util.spec_from_file_location(selected_script, script)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[selected_script] = module
-        # Init code for all the modules (so if you have a script in one of the folders, this is where your code gets initialized):
-        spec.loader.exec(module)
+            script_path = "./" + item[1] + "/" + selected_script
+        if len(script_path) > 0:
+            spec = importlib.util.spec_from_file_location(selected_script, script_path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[selected_script] = module
+            # Init code for all the modules (so if you have a script in one of the folders, this is where your code gets initialized):
+            spec.loader.exec_module(module)
 
-        inputs_allowed = []
+            inputs_allowed = []
 
-        for allowed_input in item[0]:
-            inputsAllowed.append(allowed.get(allowed_input))
+            for allowed_input in item[0]:
+                inputs_allowed.append(allowed.get(allowed_input))
 
-        scripts_to_load.append({module: module, allowed_inputs: inputs_allowed})
+            scripts_to_load.append({"module": module, "allowed_inputs": inputs_allowed})
 
 
 # Three: Block stdout so other scripts can't call print. Only when WE want to. From https://stackoverflow.com/questions/8391411/how-to-block-calls-to-print
@@ -101,8 +103,8 @@ with HidePrints() as to_print:
 
         for item in scripts_to_load:
             # This is where we call the output of every script that's currently loaded:
-            string_to_add = item.module.update(data, debug_print)
-            allowed_chars = item.allowed_inputs
+            string_to_add = item["module"].update(data, debug_print)
+            allowed_chars = item["allowed_inputs"]
             for char in string_to_add:
                 if char in allowed_chars:
                     print_string += char

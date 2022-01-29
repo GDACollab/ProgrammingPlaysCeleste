@@ -63,7 +63,6 @@
     <Compile Include="GameReader.cs" />
     <Compile Include="InputManager.cs" />
     <Compile Include="ProgramCelesteModule.cs" />
-    <Compile Include="ProgramCelesteModuleSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
