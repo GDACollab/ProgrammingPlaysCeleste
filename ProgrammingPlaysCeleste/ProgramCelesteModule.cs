@@ -21,70 +21,11 @@ namespace ProgrammingPlaysCeleste
 
     public class ProgramCelesteModule : EverestModule
     {
-        public static ProgramCelesteModule Instance;
-
-        public ProgramCelesteModule() {
-            Instance = this;
-        }
-
-        public override Type SettingsType => typeof(ProgramCelesteModuleSettings);
-        public static ProgramCelesteModuleSettings Settings => ProgramCelesteModuleSettings.Instance;
-
         static Process movementScripts;
 
         HashSet<Inputs> activeInputs;
 
         static string currentInputs = "";
-
-        private void DrawInputDivisions(TextMenu menu, ref TextMenu.Item[] inputDivisions) {
-            for (int i = 0; i < 10; i++)
-            {
-                int number = i;
-                TextMenu.Item inputsAllowed = new TextMenu.Button("Inputs allowed for #" + number + ": " + Settings.InputDivisions[number]).Pressed(
-                    () => {
-                        menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Settings.InputDivisions[number], value => Settings.InputDivisions[number] = value);
-                    });
-                TextMenu.Item folderName = new TextMenu.Button("Folder name for #" + number + ": " + Settings.InputFolderNames[number]).Pressed(
-                    () => {
-                        menu.SceneAs<Overworld>().Goto<OuiModOptionString>().Init<OuiModOptions>(Settings.InputFolderNames[number], value => Settings.InputFolderNames[number] = value);
-                    });
-                menu.Add(inputsAllowed);
-                menu.Add(folderName);
-                if (i >= Settings.NumberOfInputDivisions) {
-                    inputsAllowed.Visible = false;
-                    folderName.Visible = false;
-                }
-
-                inputDivisions[i * 2] = inputsAllowed;
-                inputDivisions[(i * 2) + 1] = folderName;
-            }
-        }
-
-        private void UpdateInputDivisions(int num, ref TextMenu.Item[] inputDivisions) {
-            for (int i = 0; i < inputDivisions.Length; i++) {
-                inputDivisions[i].Visible = (i < (num * 2));
-            }
-        }
-
-        // Because for some reason I can't use Create[PropName]Entry in CelesteModuleSettings.cs, we're using this hacky workaround:
-        public override void CreateModMenuSection(TextMenu menu, bool inGame, FMOD.Studio.EventInstance snapshot)
-        {
-            base.CreateModMenuSection(menu, inGame, snapshot);
-
-            TextMenu.Slider numDivisions = new TextMenu.Slider("Number of Input Divisions", (number) => { return number.ToString(); }, 1, 10);
-            numDivisions.Index = (Settings.NumberOfInputDivisions - 1);
-            menu.Add(numDivisions);
-
-            // 2 buttons * 10 total input divisions.
-            TextMenu.Item[] inputDivisions = new TextMenu.Item[20];
-
-            DrawInputDivisions(menu, ref inputDivisions);
-
-            numDivisions.Change((value)=> {
-                Settings.NumberOfInputDivisions = value;
-                UpdateInputDivisions(value, ref inputDivisions);
-            });
-        }
 
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
