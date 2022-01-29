@@ -10,8 +10,12 @@ import json
 
 # One: Load in the configuration settings to get the allowed inputs and division of scripts into files.
 
+
 parser = configparser.ConfigParser()
-parser.read("divisions.ini")
+
+base_path = os.getcwd() + "/Mods/ProgrammingPlaysCeleste/"
+
+parser.read(base_path + "divisions.ini")
 
 divisions = parser["Input Divisions"]
 
@@ -48,13 +52,13 @@ for i in range(len(divisions_arr)):
         selected_script = parser["Script Selection"][item[1]]
         script_path = ""
         if selected_script == "Random":
-            scripts = glob.glob('.\\code\\' + item[1] + '/*.py')
+            scripts = glob.glob(base_path + '/code/' + item[1] + '/*.py')
             if len(scripts) > 0:
                 selected_script = scripts[random.randint(0, len(scripts) - 1)]
                 script_path = selected_script
                 selected_script = os.path.basename(selected_script)
         else:
-            script_path = "./" + item[1] + "/" + selected_script
+            script_path = base_path + "/" + item[1] + "/" + selected_script
         if len(script_path) > 0:
             spec = importlib.util.spec_from_file_location(selected_script, script_path)
             module = importlib.util.module_from_spec(spec)
