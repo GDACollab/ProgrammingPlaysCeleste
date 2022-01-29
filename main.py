@@ -74,43 +74,30 @@ for i in range(len(divisions_arr)):
             scripts_to_load.append({"module": module, "allowed_inputs": inputs_allowed})
 
 
-# Three: Block stdout so other scripts can't call print. Only when WE want to. From https://stackoverflow.com/questions/8391411/how-to-block-calls-to-print
-class HidePrints:
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
-        return self._original_stdout
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stdout = self._original_stdout
-
-
-# Four: Create some debug printing options.
+# Three: Create some debug printing options. YOU SHOULD NOT BE USING PRINT().
 def debug_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-with HidePrints() as to_print:
-    # Hack-y way around this. Not sure how to communicate directly from C# to python, so we'll just use console input.
-    while (1):
-        json_input = input()
-        # So we can close the relevant stuff when we're done:
-        if json_input == "FINISHED":
-            break
+# Hack-y way around this. Not sure how to communicate directly from C# to python, so we'll just use console input.
+while (1):
+    json_input = input()
+    # So we can close the relevant stuff when we're done:
+    if json_input == "FINISHED":
+        break
 
-        try:
-            data = json.loads(json_input)
-        except:
-            debug_print("ERROR: DATA SUPPLIED IS NOT FORMATTED AS A JSON.")
+    try:
+        data = json.loads(json_input)
+    except:
+        debug_print("ERROR: DATA SUPPLIED IS NOT FORMATTED AS A JSON.")
 
-        print_string = ""
+    print_string = ""
 
-        for item in scripts_to_load:
-            # This is where we call the output of every script that's currently loaded:
-            string_to_add = item["module"].update(data, debug_print)
-            allowed_chars = item["allowed_inputs"]
-            for char in string_to_add:
-                if char in allowed_chars:
-                    print_string += char
-        print_string += "--END OF INPUT STRING--"
-        print(print_string, file=to_print)
+    for item in scripts_to_load:
+        # This is where we call the output of every script that's currently loaded:
+        string_to_add = item["module"].update(data, debug_print)
+        allowed_chars = item["allowed_inputs"]
+        for char in string_to_add:
+            if char in allowed_chars:
+                print_string += char
+    print_string += "--END OF INPUT STRING--"
+    print(print_string)
