@@ -1,5 +1,7 @@
 ﻿using Celeste;
+using Celeste.Mod;
 using Microsoft.Xna.Framework;
+using Monocle;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -17,22 +19,72 @@ namespace ProgrammingPlaysCeleste
     {
         public static double[] position;
         private static Dictionary<string, string> jsonData;
+        private static List<string> solids;
         
         static GameReader() {
             position = new double[2];
             jsonData = new Dictionary<string, string>();
+            solids = new List<string>();
         }
 
         public static void FrameUpdate(Level activeLevel) {
             Player player = activeLevel.Tracker.GetEntity<Player>();
             if (player != null) {
                 position = GetAdjustedPos(player);
-                jsonData["playerPos"] = position.ToString();
+                jsonData["playerPos"] = "[" + position[0] + "," + position[1] + "]";
+                GetLevelData();
             }
         }
 
         public static string GetJSON() {
             return JsonConvert.SerializeObject(jsonData);
+        }
+
+        private static void GetLevelData() {
+            /*List<Entity> solidTilesList = Engine.Scene.Tracker.GetEntities<SolidTiles>();
+            solidTilesList.ForEach(entity => {
+                if (entity is SolidTiles && entity.Collidable) {
+                    string entityData = "";
+                    entityData += "{\"position\": [" + entity.X + "," + entity.Y + "],";
+                    entityData += "\"bounds\": {\"top\": " + entity.Top + ", \"left\": " + entity.Left + ", \"right\": " + entity.Right + ", \"bottom\": " + entity.Bottom + "}}";
+                    solids.Add(entityData);
+                }
+            });*/
+
+            // This is a multi-step process, but here's how Celeste's levels work. The game is divided into Chapters (like the Forsaken City).
+            // Each chapter has multiple screens (called Levels in the game's code).
+
+            // So, first we need to get the current level:
+            Level level = (Level) Engine.Scene;
+
+            // Then, we need to search through the level's current entities:
+            foreach (Entity e in level.Entities) {
+                // We want to make sure that this is something Madeline can interact with. Otherwise, what is the script gonna do with it?
+                if (!(e is Decal) && !(e is BackgroundTiles) && e.Collidable && e.Active && e.Visible) {
+                    // Alright, now we pick and choose from what's left:
+
+                    // SolidTiles is all of the solid tiles (It also technically counts as a Platform, which we might want to use when adding other platforms)
+                    if (e is SolidTiles g) {
+                        Grid t = g.Grid;
+
+                        // We cooullld use the current grid to get the current cells, but that's also a terrible idea, because I'm pretty sure most of its functions
+                        // are used to check collisions. So, we're probabblly going to want to send the raw data. We're also going to want to only do this once per level
+                        // to save time.
+
+                        /*for (int i = 0; i < t.CellsX; i++) {
+                            for (int j = 0; j < t.CellsY; j++) {
+                                printStr += t[i, j].ToString() + " ";
+                            }
+                            printStr += "\n";
+                        }
+                        Logger.Log("Programming Plays Celeste", printStr);*/
+                        /*
+                        Logger.Log("Programming Plays Celeste", "Bounds: " + h.Top + " " + h.Bottom + " " + h.Left + " " + h.Right + " " + h.Left);*/
+                    }
+                    Logger.Log("Programming Plays Celeste", e.ToString());
+                }
+            }
+            jsonData["solids"] = JsonConvert.SerializeObject(solids);
         }
 
 
