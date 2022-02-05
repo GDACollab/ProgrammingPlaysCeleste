@@ -27,12 +27,22 @@ namespace ProgrammingPlaysCeleste
             solids = new List<string>();
         }
 
+        public static void Load() {
+            On.Celeste.Level.LoadLevel += GetLevelData;
+            On.Monocle.EntityList.DebugRender += Debug;
+        }
+
+        public static void Unload() {
+            On.Celeste.Level.LoadLevel -= GetLevelData;
+            On.Monocle.EntityList.DebugRender -= Debug;
+        }
+
         public static void FrameUpdate(Level activeLevel) {
             Player player = activeLevel.Tracker.GetEntity<Player>();
             if (player != null) {
                 position = GetAdjustedPos(player);
                 jsonData["playerPos"] = "[" + position[0] + "," + position[1] + "]";
-                GetLevelData();
+                UpdateLevelData();
             }
         }
 
@@ -40,7 +50,61 @@ namespace ProgrammingPlaysCeleste
             return JsonConvert.SerializeObject(jsonData);
         }
 
-        private static void GetLevelData() {
+        private static void GetLevelData(On.Celeste.Level.orig_LoadLevel orig, Celeste.Level self, Celeste.Player.IntroTypes playerIntro, bool isFromLoader) {
+            orig(self, playerIntro, isFromLoader);
+            SolidTiles tiles = self.SolidTiles;
+            Grid g = tiles.Grid;
+
+            solids.Clear();
+
+            /*int left = (int)Math.Max(0.0f, (self.Camera.Left - g.AbsoluteLeft) / g.CellWidth);
+            int right = (int)Math.Min(g.CellsX - 1, Math.Ceiling((self.Camera.Right - (double)g.AbsoluteLeft) / g.CellWidth));
+            int top = (int)Math.Max(0.0f, (self.Camera.Top - g.AbsoluteTop) / g.CellHeight);
+            int bottom = (int)Math.Min(g.CellsY - 1,
+                Math.Ceiling((self.Camera.Bottom - (double)g.AbsoluteTop) / g.CellHeight));*/
+
+            int left = (int)Math.Max(0.0f, (self.LevelOffset.X - g.AbsoluteLeft) / g.CellWidth);
+            int right = (int)Math.Min(g.CellsX - 1, Math.Ceiling((self.LevelOffset.X + self.Bounds.Width - (double)g.AbsoluteLeft)/g.CellWidth));
+            int top = (int)Math.Max(0.0f, (self.LevelOffset.Y - g.AbsoluteTop) / g.CellHeight);
+            int bottom = (int)Math.Min(g.CellsY - 1, Math.Ceiling((self.LevelOffset.Y + self.Bounds.Height - (double)g.AbsoluteTop) / g.CellHeight));
+
+            Logger.Log("Programming Plays Celeste", $"{left} {right} {top} {bottom} --- {self.Camera.Left} {g.CellsX} {g.CellsY} {g.AbsoluteLeft} {g.AbsoluteTop}");
+
+            for (int x = left; x <= right; ++x)
+            {
+                for (int y = top; y <= bottom; ++y)
+                {
+                    if (g[x, y]) {
+                        solids.Add($"[{x * g.CellWidth + g.AbsolutePosition.X}, {y * g.CellHeight + g.AbsolutePosition.Y}]");
+                    }
+                }
+            }
+            Logger.Log("Programming Plays Celeste", JsonConvert.SerializeObject(solids));
+
+            jsonData["solids"] = JsonConvert.SerializeObject(solids);
+
+            /*
+
+            Vector2 scale = new Vector2(g.CellWidth, g.CellHeight);
+
+            Vector2 start = self.Tracker.GetEntity<Player>().Center + new Vector2(0, -8);
+           
+            Vector2 end = start + new Vector2(80, -80);
+
+            Logger.Log("Programming Plays Celeste", $"{start} {end} {g.AbsolutePosition}");
+
+            start /= scale;
+            end /= scale;
+            Logger.Log("Programming Plays Celeste", $"{start} {end} {g.Data[(int)start.X, (int)start.Y]}");
+
+            Logger.Log("Programming Plays Celeste", $"{g.Width} {g.Height} {g.CellWidth} {g.CellHeight} {self.LevelOffset} {self.StartPosition} {self.Bounds.Width} {self.Bounds.Height}");*/
+        }
+
+        private static void Debug(On.Monocle.EntityList.orig_DebugRender orig, EntityList self, Camera camera) {
+            orig(self, camera);
+        }
+
+        private static void UpdateLevelData() {
             /*List<Entity> solidTilesList = Engine.Scene.Tracker.GetEntities<SolidTiles>();
             solidTilesList.ForEach(entity => {
                 if (entity is SolidTiles && entity.Collidable) {
@@ -57,34 +121,17 @@ namespace ProgrammingPlaysCeleste
             // So, first we need to get the current level:
             Level level = (Level) Engine.Scene;
 
+            Logger.Log("Programming Plays Celeste", $"{level.Camera.Top} {level.Camera.Bottom}");
+
             // Then, we need to search through the level's current entities:
             foreach (Entity e in level.Entities) {
                 // We want to make sure that this is something Madeline can interact with. Otherwise, what is the script gonna do with it?
                 if (!(e is Decal) && !(e is BackgroundTiles) && e.Collidable && e.Active && e.Visible) {
                     // Alright, now we pick and choose from what's left:
 
-                    // SolidTiles is all of the solid tiles (It also technically counts as a Platform, which we might want to use when adding other platforms)
-                    if (e is SolidTiles g) {
-                        Grid t = g.Grid;
-
-                        // We cooullld use the current grid to get the current cells, but that's also a terrible idea, because I'm pretty sure most of its functions
-                        // are used to check collisions. So, we're probabblly going to want to send the raw data. We're also going to want to only do this once per level
-                        // to save time.
-
-                        /*for (int i = 0; i < t.CellsX; i++) {
-                            for (int j = 0; j < t.CellsY; j++) {
-                                printStr += t[i, j].ToString() + " ";
-                            }
-                            printStr += "\n";
-                        }
-                        Logger.Log("Programming Plays Celeste", printStr);*/
-                        /*
-                        Logger.Log("Programming Plays Celeste", "Bounds: " + h.Top + " " + h.Bottom + " " + h.Left + " " + h.Right + " " + h.Left);*/
-                    }
-                    Logger.Log("Programming Plays Celeste", e.ToString());
+                    //Logger.Log("Programming Plays Celeste", e.ToString());
                 }
             }
-            jsonData["solids"] = JsonConvert.SerializeObject(solids);
         }
 
 

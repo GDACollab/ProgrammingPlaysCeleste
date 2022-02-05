@@ -39,12 +39,15 @@ namespace ProgrammingPlaysCeleste
             });
 
             activeInputs = new HashSet<Inputs>();
+
+            GameReader.Load();
         }
 
         public override void Unload()
         {
             On.Monocle.Engine.Update -= UpdateGame;
             On.Monocle.MInput.Update -= UpdateInput;
+            GameReader.Unload();
 
             movementScripts.StandardInput.Write("FINISHED");
         }
