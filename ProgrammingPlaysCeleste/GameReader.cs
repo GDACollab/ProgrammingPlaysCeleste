@@ -12,6 +12,12 @@ using System.Threading.Tasks;
 
 // A lot of this is modified code from https://github.com/EverestAPI/CelesteTAS-EverestInterop
 
+/* JSON Summary:
+ * playerPos: double[2], indicates player position
+ * solids: List<float[]>, array of solid tile positions. Updates on a new level position.
+ * goal: float[2], indicates the goal for the player to reach. Updates on a new level transition.
+ * 
+ */
 namespace ProgrammingPlaysCeleste
 {
 
