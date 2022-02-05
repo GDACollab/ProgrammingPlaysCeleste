@@ -6,6 +6,19 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 using Celeste.Mod.UI;
+/*
+ * Let's make some TODOs:
+ * Add data for spikes
+ * Add data for moving platforms
+ * Add data for player velocity, whether or not they can jump, climb
+ * Make tutorials for how to use all of this
+ * Interest survey out by 2/13?
+ * Draft and tutorials done by 2/20?
+ * To POLISH:
+ * Give initialization stuff for setting goals to make searching easier.
+ * Make sure main.py filters data correctly.
+ * Make sure python scripts can read the coordinate data and act appropriately.
+ */
 
 namespace ProgrammingPlaysCeleste
 {
