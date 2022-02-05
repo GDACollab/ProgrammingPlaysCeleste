@@ -89,18 +89,16 @@ namespace ProgrammingPlaysCeleste
                 int index;
                 for (index = 0; courseRoute[index] != $"lvl_{self.Session.Level}" && index < courseRoute.Length; index++);
                 string goalNext = courseRoute[index + 1].Replace("lvl_", "");
-                self.Session.MapData.Levels.ForEach(data => {
-                    Logger.Log("Programming Plays Celeste", $"{data.Name} {goalNext}");
-                    if (data.Name == goalNext) {
-                        // Quick hack to get the closest point we want to get to in the next level:
-                        goal = data.Spawns[0];
-                    }
+                LevelData nextLevel = self.Session.MapData.Levels.Find((LevelData data) => {
+                    return data.Name == goalNext;
                 });
-                if (goal != Vector2.Zero) {
-                    jsonData["goal"] = new float[] { goal.X, goal.Y };
+                if (nextLevel != null) {
+                    // Hacky workaround for finding goals based on the next level:
+                    goal = nextLevel.Spawns[0];
                     Logger.Log("Programming Plays Celeste", $"New Goal: {goal}");
                 }
             }
+            jsonData["goal"] = new float[] { goal.X, goal.Y };
         }
 
         private static void Debug(On.Monocle.EntityList.orig_DebugRender orig, EntityList self, Camera camera) {
