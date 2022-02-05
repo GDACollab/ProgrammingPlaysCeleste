@@ -8,10 +8,8 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Add data for getting tile hitboxes (just put cellWidth and cellHeight in the JSON)
- * Add data for spikes (and potentially other dangerous entities?)
- * Make sure platform data accounts for moving platforms and one-way platforms.
- * Add data for player velocity, whether or not they can jump, climb
+ * Make sure platform data accounts for moving platforms and one-way platforms (and their hitboxes!).
+ * Add data for player velocity, whether or not they can jump, climb.
  * Add data for time
  * Add data for level name (and tie that in to only sending solid data when the level name is new)
  * Add options to reset the level and go through every possible script combination after X amount of time.
@@ -23,6 +21,7 @@ using Celeste.Mod.UI;
  * Give initialization stuff for setting goals to make searching easier.
  * Make sure main.py filters data correctly.
  * Make sure python scripts can read the coordinate data and act appropriately.
+ * Test this works with Mac and Linux computers
  * Add data for strawberries?
  * Set goal to end level trigger
  */

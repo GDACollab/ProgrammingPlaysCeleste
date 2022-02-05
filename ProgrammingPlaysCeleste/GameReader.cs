@@ -13,9 +13,12 @@ using System.Threading.Tasks;
 // A lot of this is modified code from https://github.com/EverestAPI/CelesteTAS-EverestInterop
 
 /* JSON Summary:
- * playerPos: double[2], indicates player position
- * solids: List<float[]>, array of solid tile positions. Updates on a new level position.
+ * playerPos: float[2], indicates player position (The center of where they are)
+ * playerSize: float[2], indicates player hitbox size (X, Y).
+ * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
+ * tileSize: float[2], the width and height for the solids' hitboxes.
  * goal: float[2], indicates the goal for the player to reach. Updates on a new level transition.
+ * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size.
  * 
  */
 namespace ProgrammingPlaysCeleste
@@ -24,36 +27,48 @@ namespace ProgrammingPlaysCeleste
     public static class GameReader
     {
 
-        public static double[] position;
+        private static float[] position;
+        private static float[] size;
         private static Dictionary<string, object> jsonData;
         private static List<float[]> solids;
+        private static List<object> hazards;
+        private static List<object> platforms;
         
         static GameReader() {
-            position = new double[2];
+            position = new float[2];
             jsonData = new Dictionary<string, object>();
             solids = new List<float[]>();
+            hazards = new List<object>();
+            platforms = new List<object>();
         }
 
         public static void Load() {
             On.Celeste.Level.LoadLevel += GetLevelData;
-            On.Monocle.EntityList.DebugRender += Debug;
+            On.Celeste.Level.Begin += LevelBeginGetData;
         }
 
         public static void Unload() {
             On.Celeste.Level.LoadLevel -= GetLevelData;
-            On.Monocle.EntityList.DebugRender -= Debug;
+            On.Celeste.Level.Begin -= LevelBeginGetData;
         }
 
         public static void FrameUpdate(Level activeLevel) {
             Player player = activeLevel.Tracker.GetEntity<Player>();
             if (player != null) {
-                position = GetAdjustedPos(player);
+                position = new float[] { player.Center.X, player.Center.Y };
+                size = new float[] { player.Collider.Width, player.Collider.Height };
                 jsonData["playerPos"] = position;
+                jsonData["playerSize"] = size;
+                UpdateLevelData(activeLevel);
             }
         }
 
         public static string GetJSON() {
             return JsonConvert.SerializeObject(jsonData);
+        }
+
+        private static void LevelBeginGetData(On.Celeste.Level.orig_Begin orig, Level self) { 
+            jsonData["tileSize"] = new float[] { self.SolidTiles.Grid.CellWidth, self.SolidTiles.Grid.CellHeight };
         }
 
         private static void GetLevelData(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
@@ -104,61 +119,30 @@ namespace ProgrammingPlaysCeleste
             jsonData["goal"] = new float[] { goal.X, goal.Y };
         }
 
-        private static void Debug(On.Monocle.EntityList.orig_DebugRender orig, EntityList self, Camera camera) {
-            orig(self, camera);
-        }
+        public static void UpdateLevelData(Level level) {
+            hazards.Clear();
+            platforms.Clear();
+            foreach (Entity e in level.Entities) {
+                if (e.Collidable) {
+                    if (e.GetType() == typeof(Spikes))
+                    {
+                        Dictionary<string, object> hazard = new Dictionary<string, object>();
+                        hazard.Add("position", new float[] { e.Position.X, e.Position.Y });
+                        hazard.Add("size", new float[] { e.Collider.Width, e.Collider.Height });
+                        hazards.Add(hazard);
+                    }
 
-
-        // Directly modified from https://github.com/EverestAPI/CelesteTAS-EverestInterop/blob/master/CelesteTAS-EverestInterop/TAS/GameInfo.cs
-        private static double[] GetAdjustedPos(Actor actor)
-        {
-            Vector2 intPos = actor.Position;
-            Vector2 subpixelPos = actor.PositionRemainder;
-            double x = intPos.X;
-            double y = intPos.Y;
-            double subX = subpixelPos.X;
-            double subY = subpixelPos.Y;
-
-            double[] positionArr = new double[2];
-
-            // euni: ensure .999/.249 round away from .0/.25
-            // .00/.25/.75 let you distinguish which 8th of a pixel you're on, quite handy when doing subpixel manip
-            if (Math.Abs(subX) % 0.25 < 0.01 || Math.Abs(subX) % 0.25 > 0.24)
-            {
-                if (x > 0 || x == 0 && subX > 0)
-                {
-                    x += Math.Floor(subX * 100) / 100;
-                }
-                else
-                {
-                    x += Math.Ceiling(subX * 100) / 100;
+                    if (e.GetType() != typeof(SolidTiles) && e is Platform p) {
+                        Dictionary<string, object> platform = new Dictionary<string, object>();
+                        platform.Add("position", new float[] { p.Center.X, p.Center.Y });
+                        platform.Add("size", new float[] { p.Collider.Width, p.Collider.Height });
+                        platform.Add("type", e.GetType().ToString());
+                        platforms.Add(platform);
+                    }
                 }
             }
-            else
-            {
-                x += subX;
-            }
-
-            if (Math.Abs(subY) % 0.25 < 0.01 || Math.Abs(subY) % 0.25 > 0.24)
-            {
-                if (y > 0 || y == 0 && subY > 0)
-                {
-                    y += Math.Floor(subY * 100) / 100;
-                }
-                else
-                {
-                    y += Math.Ceiling(subY * 100) / 100;
-                }
-            }
-            else
-            {
-                y += subY;
-            }
-
-            positionArr[0] = x;
-            positionArr[1] = y;
-
-            return positionArr;
+            jsonData["hazards"] = hazards;
+            jsonData["platforms"] = platforms;
         }
     }
 }
