@@ -74,8 +74,6 @@ namespace ProgrammingPlaysCeleste
                 }
             }
 
-            Logger.Log("Programming Plays Celeste", $"{self.Session.Level} {self.Session.MapData.Filename}");
-
 
             jsonData["solids"] = solids;
 
@@ -85,7 +83,6 @@ namespace ProgrammingPlaysCeleste
             if (System.IO.File.Exists(path))
             {
                 string[] courseRoute = System.IO.File.ReadAllLines(path);
-                Logger.Log("Programming Plays Celeste", courseRoute.ToString());
                 int index;
                 for (index = 0; courseRoute[index] != $"lvl_{self.Session.Level}" && index < courseRoute.Length; index++);
                 string goalNext = courseRoute[index + 1].Replace("lvl_", "");

@@ -95,7 +95,7 @@ namespace ProgrammingPlaysCeleste
                         break;
                 }
             }
-            Logger.Log("Programming Plays Celeste", "Full String: " + input + "\nUnidentified Inputs:" + printStr);
+            Logger.Log("Programming Plays Celeste", "Full String: " + input + " Unidentified Inputs:" + printStr);
         }
 
         private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
