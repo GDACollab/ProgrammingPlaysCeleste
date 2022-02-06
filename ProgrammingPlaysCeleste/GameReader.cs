@@ -24,6 +24,7 @@ using System.Threading.Tasks;
  * hazards: List<object>, array of objects that kill on collision {position: float[2], size: float[2]}
  * entities: List<object>, array of miscellaneous entities that have a variety of purposes. For Forsaken city, this stores springs and strawberries: {position: float[2], size: float[2], type: string}. If a strawberry, it also has a "winged" property.
  * levelName: The name of the current level/screen you're on.
+ * time: The amount of time that has passed since the game has started. This will not advance while awaiting output from python scripts.
  */
 namespace ProgrammingPlaysCeleste
 {
@@ -94,8 +95,11 @@ namespace ProgrammingPlaysCeleste
                 playerData["stamina"] = player.Stamina;
                 playerData["speed"] = new float[] { player.Speed.X, player.Speed.Y };
                 jsonData["player"] = playerData;
-                UpdateLevelData(activeLevel);
             }
+
+
+            jsonData["time"] = Engine.Scene.TimeActive;
+            UpdateLevelData(activeLevel);
         }
 
         public static void Cleanup() {
