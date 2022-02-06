@@ -8,7 +8,6 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Make sure platform data accounts for moving platforms and one-way platforms (and their hitboxes!).
  * Add data to show whether or not the player is dashing or jumping or climbing
  * Add data for springs
  * Add data for time

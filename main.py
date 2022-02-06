@@ -73,17 +73,20 @@ for i in range(len(divisions_arr)):
 
             scripts_to_load.append({"module": module, "allowed_inputs": inputs_allowed})
 
+error_log = open("code_log.txt", "w")
 
 # Three: Create some debug printing options. YOU SHOULD NOT BE USING PRINT(). Just going to have to hope that people don't use print(), because I can't find a way to override it
 # in a way that also allows the mod to intercept stdout.
 def debug_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+    print(*args, file=error_log)
 
 # Hack-y way around this. Not sure how to communicate directly from C# to python, so we'll just use console input.
 while (1):
     json_input = input()
     # So we can close the relevant stuff when we're done:
     if json_input == "FINISHED":
+        error_log.close()
         break
 
     try:
