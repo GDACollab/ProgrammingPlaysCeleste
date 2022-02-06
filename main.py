@@ -10,12 +10,17 @@ import json
 
 # One: Load in the configuration settings to get the allowed inputs and division of scripts into files.
 
-
 parser = configparser.ConfigParser()
 
-base_path = os.getcwd() + "/Mods/ProgrammingPlaysCeleste/"
+base_path = os.getcwd()
 
-parser.read(base_path + "divisions.ini")
+if "\\Mods\\ProgrammingPlaysCeleste" not in base_path:
+    base_path += "\\Mods\\ProgrammingPlaysCeleste"
+
+print(base_path)
+
+parser.read(base_path + "\\divisions.ini")
+print(parser)
 
 divisions = parser["Input Divisions"]
 
@@ -46,32 +51,113 @@ allowed = {
     "Dash": "X"
 }
 
-for i in range(len(divisions_arr)):
-    item = divisions_arr[i]
-    if len(item) == 2 and item[1] in parser["Script Selection"]:
-        selected_script = parser["Script Selection"][item[1]]
-        script_path = ""
-        if selected_script == "Random":
-            scripts = glob.glob(base_path + '/code/' + item[1] + '/*.py')
-            if len(scripts) > 0:
-                selected_script = scripts[random.randint(0, len(scripts) - 1)]
-                script_path = selected_script
-                selected_script = os.path.basename(selected_script)
-        else:
-            script_path = base_path + "/" + item[1] + "/" + selected_script
-        if len(script_path) > 0:
-            spec = importlib.util.spec_from_file_location(selected_script, script_path)
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[selected_script] = module
-            # Init code for all the modules (so if you have a script in one of the folders, this is where your code gets initialized):
-            spec.loader.exec_module(module)
+# I should really organize this into some proper functions.
 
-            inputs_allowed = []
+def get_combo(combo_path):
+    global scripts_to_load
 
-            for allowed_input in item[0]:
-                inputs_allowed.append(allowed.get(allowed_input))
+    f = open(combo_path, "r")
+    combos = f.readlines()
+    combo_to_remove = random.randint(0, len(combos) - 1)
+    scripts_to_load = combos[combo_to_remove].split(",")
+    f.close()
+    # So we can restart the process once we've gone through all combos:
+    if combo_to_remove == len(combos) - 1:
+        os.remove(combo_path)
+    curr_line = 0
 
-            scripts_to_load.append({"module": module, "allowed_inputs": inputs_allowed})
+    # Go through the file, write all files except for the combination we picked.
+    with open(combo_path, "w") as fw:
+        for line in combos:
+            if  curr_line != combo_to_remove:
+                fw.write(line)
+            curr_line += 1
+        
+def write_all_combos(combo_path):
+    total_scripts = []
+    total_scripts_i = []
+    for i in range(len(divisions_arr)): # First, go through all items.
+        item = divisions_arr[i] 
+        scripts = glob.glob(base_path + '\\code\\' + item[1] + '\\*.py')
+        total_scripts.append(scripts)
+        total_scripts_i.append(0)
+    # Alright, here's how this works. Let's say we have 3 divisions, and each one has a different number of scripts.
+    # So division A has 5 scripts, division B 2 scripts, division C 3 scripts.
+    # That's 5 * 2 * 3 = 30 total combinations.
+    # To make things simpler on ourselves, we can treat this like a number system.
+    # So we create an array, total_scripts = [A scripts, B scripts, C scripts].
+    # And then we iterate by "adding" from one script to the next:
+    # [A1, B1, C1] Add to last index
+    # [A1, B1, C2] Add to last index
+    # [A1, B1, C3] Add to last index
+    # [A1, B2, C1] Add to last index, add to second index
+    # This should give us all the possible combinations of the scripts without repetition.
+
+    f = open(combo_path, "w")
+    last_digit = total_scripts_i[len(total_scripts) - 1]
+    curr_digit = 0
+    while last_digit < len(total_scripts[len(total_scripts) - 1]):
+        # Write all current possibilities:
+        for i in range(len(total_scripts)):
+            to_write = total_scripts[i][total_scripts_i[i]]
+            if i != len(total_scripts) - 1:
+                to_write += ","
+            f.write(to_write)
+        f.write("\n")
+
+        # Then increment:
+        while True:
+            total_scripts_i[curr_digit] += 1
+
+            if curr_digit != len(total_scripts) -1 and total_scripts_i[curr_digit] > len(total_scripts[curr_digit]) - 1:
+                total_scripts_i[curr_digit] = 0
+                curr_digit += 1
+            else:
+                curr_digit = 0
+                break
+    f.close()
+    get_combo(combo_path)
+
+# If we're supposed to go through all combinations of scripts:
+if parser["Script Selection"]["get-all-script-combos"].lower() == "true":
+    combo_path = base_path + "\\possiblecombinations.txt"
+
+    # If the file exists, we can read through all the existing combos and pick one at random.
+    if os.path.exists(combo_path):
+        get_combo(combo_path)
+    else: # If not, we just need to write all possible combinations.
+        write_all_combos(combo_path)
+else:
+    # Otherwise, just get the paths either randomly (from python), or from the specific filename.
+    for i in range(len(divisions_arr)):
+        item = divisions_arr[i]
+        if len(item) == 2 and item[1] in parser["Script Selection"]:
+            selected_script = parser["Script Selection"][item[1]]
+            script_path = ""
+            if selected_script == "Random":
+                scripts = glob.glob(base_path + '\\code\\' + item[1] + '\\*.py')
+                if len(scripts) > 0:
+                    selected_script = scripts[random.randint(0, len(scripts) - 1)]
+                    script_path = selected_script
+            else:
+                script_path = base_path + "\\" + item[1] + "\\" + selected_script
+            if len(script_path) > 0:
+                scripts_to_load.append(script_path)
+
+scripts = []
+for script in scripts_to_load:
+    spec = importlib.util.spec_from_file_location(os.path.basename(selected_script), script_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[os.path.basename(selected_script)] = module
+    # Init code for all the modules (so if you have a script in one of the folders, this is where your code gets initialized):
+    spec.loader.exec_module(module)
+
+    inputs_allowed = []
+
+    for allowed_input in item[0]:
+        inputs_allowed.append(allowed.get(allowed_input))
+
+    scripts.append({"module": module, "allowed_inputs": inputs_allowed})
 
 error_log = open("code_log.txt", "w")
 
@@ -96,7 +182,7 @@ while (1):
 
     print_string = ""
 
-    for item in scripts_to_load:
+    for item in scripts:
         # This is where we call the output of every script that's currently loaded:
         string_to_add = item["module"].update(data, debug_print)
         allowed_chars = item["allowed_inputs"]

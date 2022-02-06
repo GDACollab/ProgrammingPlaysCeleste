@@ -8,19 +8,17 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Add options to reset the level and go through every possible script combination after X amount of time.
+ * Add options in the python script to set a new combination every time you reload
  * Make tutorials for how to use all of this
  * Interest survey out by 2/13?
  * Draft and tutorials done by 2/20?
  * Publish repository by 2/20?
  * To POLISH:
- * Give initialization stuff for setting goals to make searching easier.
- * Make sure main.py filters data correctly.
- * Make sure python scripts can read the coordinate data and act appropriately.
+ * Acutally initialize the code for searching for goals to avoid spending more processing time on it.
+ * Filter output from python to only accept print statements from main.py (maybe like a header before the print statement?)
  * Test this works with Mac and Linux computers
  * Add data for strawberries?
- * Set goal to end level trigger
- * Auto-resume if input not recieved after a certain period of time?
+ * Set goal to end level trigger on the final level
  */
 
 namespace ProgrammingPlaysCeleste
