@@ -23,6 +23,7 @@ def new_level(data, debug_print):
     y.append(-data["goal"][1])
     plt.scatter(x,y)
     plt.plot()
+    # This is saved into your Celeste Directory/level.png
     plt.savefig("level.png")
     plt.clf()
 
@@ -30,6 +31,7 @@ def new_level(data, debug_print):
 def update(data, debug_print):
     # BASIC INFORMATION
     # Print the data we're given. DON'T EVER USE PRINT().
+    # We can see a copy of the statements from debug_print in your Celeste Directory/code_log.txt
     debug_print(data)
     # If you want some delay to read console information:
     #time.sleep(0.01)
