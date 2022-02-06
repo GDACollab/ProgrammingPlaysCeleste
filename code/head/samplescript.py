@@ -18,6 +18,7 @@ def new_level(data, debug_print):
     for coords in solids:
         x.append(coords[0])
         y.append(-coords[1])
+    # We can also add the goal, just so we can see where we need to go:
     x.append(data["goal"][0])
     y.append(-data["goal"][1])
     plt.scatter(x,y)
@@ -29,7 +30,7 @@ def new_level(data, debug_print):
 def update(data, debug_print):
     # BASIC INFORMATION
     # Print the data we're given. DON'T EVER USE PRINT().
-    #debug_print(data)
+    debug_print(data)
     # If you want some delay to read console information:
     #time.sleep(0.01)
 
@@ -42,9 +43,8 @@ def update(data, debug_print):
         level_name = data["levelName"]
         new_level(data, debug_print)
     
-    #return_str = "R"
-    #if "onGround" in data and data["onGround"]:
-    #    return_str += "J"
+    return_str = "R"
+    if data["player"]["onGround"] or data["player"]["jumpTimer"] > 0:
+        return_str += "J"
     # Continually go to the right (and jump if we can):
-    #return return_str
-    return ""
+    return return_str

@@ -8,8 +8,6 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Add data for time
- * Add data for level name (and tie that in to only sending solid data when the level name is new)
  * Add options to reset the level and go through every possible script combination after X amount of time.
  * Make tutorials for how to use all of this
  * Interest survey out by 2/13?
@@ -124,6 +122,7 @@ namespace ProgrammingPlaysCeleste
                 if (!awaitingInput) {
                     GameReader.FrameUpdate(level);
                     movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
+                    GameReader.Cleanup();
                     awaitingInput = true;
                 }
 
@@ -138,7 +137,6 @@ namespace ProgrammingPlaysCeleste
                         currentInputs = "";
                         awaitingInput = false;
                         orig(self, gameTime);
-                        GameReader.Cleanup();
                     }
                 }
             }
