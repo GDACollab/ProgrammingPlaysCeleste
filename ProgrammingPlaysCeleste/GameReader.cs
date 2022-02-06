@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 /* JSON Summary:
  * playerPos: float[2], indicates player position (The center of where they are)
  * playerSize: float[2], indicates player hitbox size (X, Y).
- * player: Dictionary<string, object>, {position: float[2], size: float[2], speed: float[2], onGround: bool, wallJump (if you can wall jump or climb. -1 is left facing wall, 1 is right facing wall, 2 if you're somehow touching both.): int, canDash: bool, stamina (how long you can stay wall climbing): int}
+ * player: Dictionary<string, object>, {position: float[2], size: float[2], speed: float[2], onGround: bool, wallJump (if you can wall jump or climb. -1 is left facing wall, 1 is right facing wall, 2 if you're somehow touching both.): int, numDashes: int, dashTimer (how long until you're able to dash): float, stamina (how long you can stay wall climbing): int}
  * tileSize: float[2], the width and height for the solids' hitboxes.
  * goal: float[2], indicates the goal for the player to reach. Updates on a new level transition.
  * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
@@ -39,6 +39,7 @@ namespace ProgrammingPlaysCeleste
         private static List<object> platforms;
 
         private static readonly DWallJumpCheck WallJumpCheck;
+        private static readonly FieldInfo dashCooldownTimer;
         
         static GameReader() {
             position = new float[2];
@@ -48,8 +49,9 @@ namespace ProgrammingPlaysCeleste
             platforms = new List<object>();
             playerData = new Dictionary<string, object>();
 
-            MethodInfo wallJumpCheck = typeof(Player).GetMethod("WallJumpCheck");
+            dashCooldownTimer = typeof(Player).GetField("dashCooldownTimer", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
+            MethodInfo wallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             WallJumpCheck = (DWallJumpCheck)wallJumpCheck.CreateDelegate(typeof(DWallJumpCheck));
         }
 
@@ -70,7 +72,8 @@ namespace ProgrammingPlaysCeleste
                 size = new float[] { player.Collider.Width, player.Collider.Height };
                 playerData["position"] = position;
                 playerData["size"] = size;
-                playerData["canDash"] = player.CanDash;
+                playerData["numDashes"] = player.Dashes;
+                playerData["dashTimer"] = dashCooldownTimer.GetValue(player);
                 // TODO: Check this works.
                 playerData["onGround"] = player.LoseShards;
                 int canJump = 0;
@@ -89,11 +92,20 @@ namespace ProgrammingPlaysCeleste
             }
         }
 
+        public static void Cleanup() {
+            // Remove the solids if they've already been sent (we do this once per level load, otherwise it's a constant stream of unnecessary data the user already knows)
+            if (jsonData.ContainsKey("solids"))
+            {
+                jsonData.Remove("solids");
+            }
+        }
+
         public static string GetJSON() {
             return JsonConvert.SerializeObject(jsonData);
         }
 
-        private static void LevelBeginGetData(On.Celeste.Level.orig_Begin orig, Level self) { 
+        private static void LevelBeginGetData(On.Celeste.Level.orig_Begin orig, Level self) {
+            orig(self);
             jsonData["tileSize"] = new float[] { self.SolidTiles.Grid.CellWidth, self.SolidTiles.Grid.CellHeight };
         }
 
@@ -149,6 +161,7 @@ namespace ProgrammingPlaysCeleste
 
             jsonData["levelName"] = "lvl_" + self.Session.Level;
         }
+
 
         public static void UpdateLevelData(Level level) {
             hazards.Clear();

@@ -133,6 +133,7 @@ namespace ProgrammingPlaysCeleste
                         StringToInput(currentInputs);
                         currentInputs = "";
                         orig(self, gameTime);
+                        GameReader.Cleanup();
                     }
                 }
             }
