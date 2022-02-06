@@ -41,10 +41,6 @@ namespace ProgrammingPlaysCeleste
 
         HashSet<Inputs> activeInputs;
 
-        static string currentInputs = "";
-
-        bool awaitingInput = false;
-
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
             On.Monocle.MInput.Update += UpdateInput;
@@ -119,25 +115,26 @@ namespace ProgrammingPlaysCeleste
         private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
             if (Engine.Scene is Level level)
             {
-                if (!awaitingInput) {
-                    GameReader.FrameUpdate(level);
-                    movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
-                    GameReader.Cleanup();
-                    awaitingInput = true;
-                }
+                GameReader.FrameUpdate(level);
+                movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
+                GameReader.Cleanup();
 
-                if (awaitingInput && !movementScripts.StandardOutput.EndOfStream)
+                // Unless the program has been closed, we continue to read from it:
+                if (!movementScripts.StandardOutput.EndOfStream)
                 {
-                    string input = movementScripts.StandardOutput.ReadLine();
-                    currentInputs += input;
-                    if (currentInputs.Contains("--END OF INPUT STRING--"))
-                    {
-                        currentInputs = currentInputs.Replace("--END OF INPUT STRING--", "");
-                        StringToInput(currentInputs);
-                        currentInputs = "";
-                        awaitingInput = false;
-                        orig(self, gameTime);
+                    // We keep reading until we get the OK from the main.py script:
+                    string input = "";
+                    while (!input.Contains("--END OF INPUT STRING--")) {
+                        input += movementScripts.StandardOutput.ReadLine();
                     }
+                    input = input.Replace("--END OF INPUT STRING--", "");
+                    input = input.Replace("\n", "");
+                    StringToInput(input);
+                    orig(self, gameTime);
+                }
+                else {
+                    StringToInput("");
+                    orig(self, gameTime);
                 }
             }
             else {
