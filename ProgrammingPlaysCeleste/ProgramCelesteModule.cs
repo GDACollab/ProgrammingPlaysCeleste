@@ -8,8 +8,6 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Add data to show whether or not the player is dashing or jumping or climbing
- * Add data for springs
  * Add data for time
  * Add data for level name (and tie that in to only sending solid data when the level name is new)
  * Add options to reset the level and go through every possible script combination after X amount of time.
@@ -24,6 +22,7 @@ using Celeste.Mod.UI;
  * Test this works with Mac and Linux computers
  * Add data for strawberries?
  * Set goal to end level trigger
+ * Auto-resume if input not recieved after a certain period of time?
  */
 
 namespace ProgrammingPlaysCeleste
@@ -45,6 +44,8 @@ namespace ProgrammingPlaysCeleste
         HashSet<Inputs> activeInputs;
 
         static string currentInputs = "";
+
+        bool awaitingInput = false;
 
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
@@ -120,17 +121,22 @@ namespace ProgrammingPlaysCeleste
         private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
             if (Engine.Scene is Level level)
             {
-                GameReader.FrameUpdate(level);
+                if (!awaitingInput) {
+                    GameReader.FrameUpdate(level);
+                    movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
+                    awaitingInput = true;
+                }
 
-                movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
-
-                if (!movementScripts.StandardOutput.EndOfStream) {
+                if (awaitingInput && !movementScripts.StandardOutput.EndOfStream)
+                {
                     string input = movementScripts.StandardOutput.ReadLine();
                     currentInputs += input;
-                    if (currentInputs.Contains("--END OF INPUT STRING--")) {
+                    if (currentInputs.Contains("--END OF INPUT STRING--"))
+                    {
                         currentInputs = currentInputs.Replace("--END OF INPUT STRING--", "");
                         StringToInput(currentInputs);
                         currentInputs = "";
+                        awaitingInput = false;
                         orig(self, gameTime);
                         GameReader.Cleanup();
                     }
