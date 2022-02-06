@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,11 +16,13 @@ using System.Threading.Tasks;
 /* JSON Summary:
  * playerPos: float[2], indicates player position (The center of where they are)
  * playerSize: float[2], indicates player hitbox size (X, Y).
- * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
+ * player: Dictionary<string, object>, {position: float[2], size: float[2], speed: float[2], onGround: bool, wallJump (if you can wall jump or climb. -1 is left facing wall, 1 is right facing wall, 2 if you're somehow touching both.): int, canDash: bool, stamina (how long you can stay wall climbing): int}
  * tileSize: float[2], the width and height for the solids' hitboxes.
  * goal: float[2], indicates the goal for the player to reach. Updates on a new level transition.
+ * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
  * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size.
- * 
+ * hazards: List<object>, array of objects that kill on collision {position: float[2], size: float[2]}
+ * levelName: The name of the current level/screen you're on.
  */
 namespace ProgrammingPlaysCeleste
 {
@@ -30,9 +33,12 @@ namespace ProgrammingPlaysCeleste
         private static float[] position;
         private static float[] size;
         private static Dictionary<string, object> jsonData;
+        private static Dictionary<string, object> playerData;
         private static List<float[]> solids;
         private static List<object> hazards;
         private static List<object> platforms;
+
+        private static readonly DWallJumpCheck WallJumpCheck;
         
         static GameReader() {
             position = new float[2];
@@ -40,6 +46,11 @@ namespace ProgrammingPlaysCeleste
             solids = new List<float[]>();
             hazards = new List<object>();
             platforms = new List<object>();
+            playerData = new Dictionary<string, object>();
+
+            MethodInfo wallJumpCheck = typeof(Player).GetMethod("WallJumpCheck");
+
+            WallJumpCheck = (DWallJumpCheck)wallJumpCheck.CreateDelegate(typeof(DWallJumpCheck));
         }
 
         public static void Load() {
@@ -57,8 +68,23 @@ namespace ProgrammingPlaysCeleste
             if (player != null) {
                 position = new float[] { player.Center.X, player.Center.Y };
                 size = new float[] { player.Collider.Width, player.Collider.Height };
-                jsonData["playerPos"] = position;
-                jsonData["playerSize"] = size;
+                playerData["position"] = position;
+                playerData["size"] = size;
+                playerData["canDash"] = player.CanDash;
+                // TODO: Check this works.
+                playerData["onGround"] = player.LoseShards;
+                int canJump = 0;
+                if (WallJumpCheck(player, -1)) {
+                    canJump = -1;
+                }
+                if (WallJumpCheck(player, 1)) {
+                    // In case you're able to wall-jump simultaneously?
+                    canJump = Math.Abs(canJump) + 1;
+                }
+                playerData["wallJump"] = canJump;
+                playerData["stamina"] = player.Stamina;
+                playerData["speed"] = new float[] { player.Speed.X, player.Speed.Y };
+                jsonData["player"] = playerData;
                 UpdateLevelData(activeLevel);
             }
         }
@@ -106,17 +132,22 @@ namespace ProgrammingPlaysCeleste
                 string[] courseRoute = System.IO.File.ReadAllLines(path);
                 int index;
                 for (index = 0; courseRoute[index] != $"lvl_{self.Session.Level}" && index < courseRoute.Length; index++);
-                string goalNext = courseRoute[index + 1].Replace("lvl_", "");
-                LevelData nextLevel = self.Session.MapData.Levels.Find((LevelData data) => {
-                    return data.Name == goalNext;
-                });
-                if (nextLevel != null) {
-                    // Hacky workaround for finding goals based on the next level:
-                    goal = nextLevel.Spawns[0];
-                    Logger.Log("Programming Plays Celeste", $"New Goal: {goal}");
+                if (courseRoute[index] == $"lvl_{self.Session.Level}" && index != courseRoute.Length - 1) {
+                    string goalNext = courseRoute[index + 1].Replace("lvl_", "");
+                    LevelData nextLevel = self.Session.MapData.Levels.Find((LevelData data) => {
+                        return data.Name == goalNext;
+                    });
+                    if (nextLevel != null)
+                    {
+                        // Hacky workaround for finding goals based on the next level:
+                        goal = nextLevel.Spawns[0];
+                        Logger.Log("Programming Plays Celeste", $"New Goal: {goal}");
+                    }
                 }
             }
             jsonData["goal"] = new float[] { goal.X, goal.Y };
+
+            jsonData["levelName"] = "lvl_" + self.Session.Level;
         }
 
         public static void UpdateLevelData(Level level) {
@@ -144,5 +175,7 @@ namespace ProgrammingPlaysCeleste
             jsonData["hazards"] = hazards;
             jsonData["platforms"] = platforms;
         }
+
+        private delegate bool DWallJumpCheck(Player player, int dir);
     }
 }

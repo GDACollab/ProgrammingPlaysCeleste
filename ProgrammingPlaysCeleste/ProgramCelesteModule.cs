@@ -9,7 +9,8 @@ using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
  * Make sure platform data accounts for moving platforms and one-way platforms (and their hitboxes!).
- * Add data for player velocity, whether or not they can jump, climb.
+ * Add data to show whether or not the player is dashing or jumping or climbing
+ * Add data for springs
  * Add data for time
  * Add data for level name (and tie that in to only sending solid data when the level name is new)
  * Add options to reset the level and go through every possible script combination after X amount of time.
