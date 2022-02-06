@@ -43,7 +43,9 @@ def update(data, debug_print):
         level_name = data["levelName"]
         new_level(data, debug_print)
     
-    return_str = "R"
+    # You'll notice adding R (right) to the inputs will cause the player to move right.
+    # Adding U (Up) to the inputs however, results in no changes, because divisions.ini doesn't allow code in the head folder to use up. 
+    return_str = "RU"
     if data["player"]["onGround"] or data["player"]["jumpTimer"] > 0:
         return_str += "J"
     # Continually go to the right (and jump if we can):
