@@ -74,6 +74,7 @@ def get_combo(combo_path):
             curr_line += 1
         
 def write_all_combos(combo_path):
+    global divisions_arr
     total_scripts = []
     total_scripts_i = []
     for i in range(len(divisions_arr)): # First, go through all items.
@@ -146,9 +147,9 @@ else:
 
 scripts = []
 for script in scripts_to_load:
-    spec = importlib.util.spec_from_file_location(os.path.basename(selected_script), script_path)
+    spec = importlib.util.spec_from_file_location(os.path.basename(script), script)
     module = importlib.util.module_from_spec(spec)
-    sys.modules[os.path.basename(selected_script)] = module
+    sys.modules[os.path.basename(script)] = module
     # Init code for all the modules (so if you have a script in one of the folders, this is where your code gets initialized):
     spec.loader.exec_module(module)
 

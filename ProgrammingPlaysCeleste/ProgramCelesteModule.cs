@@ -8,7 +8,8 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Add options in the python script to set a new combination every time you reload
+ * Data for easily turning the solids array into a grid (subtract levelOffset from x and y? And maybe include width and height of level?)
+ * Add options in the python script to set a new combination every time you reload (TEST IF THIS WORKS)
  * Make tutorials for how to use all of this
  * Interest survey out by 2/13?
  * Draft and tutorials done by 2/20?
@@ -17,7 +18,6 @@ using Celeste.Mod.UI;
  * Acutally initialize the code for searching for goals to avoid spending more processing time on it.
  * Filter output from python to only accept print statements from main.py (maybe like a header before the print statement?)
  * Test this works with Mac and Linux computers
- * Add data for strawberries?
  * Set goal to end level trigger on the final level
  */
 

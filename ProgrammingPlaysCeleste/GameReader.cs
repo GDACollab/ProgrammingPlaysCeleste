@@ -17,13 +17,17 @@ using System.Threading.Tasks;
  * playerPos: float[2], indicates player position (The center of where they are)
  * playerSize: float[2], indicates player hitbox size (X, Y).
  * player: Dictionary<string, object>, {position: float[2], size: float[2], speed: float[2], onGround: bool, jumpTimer (how long you can continue to hold the jump button for): float, wallJump (if you can wall jump or climb. -1 is left facing wall, 1 is right facing wall, 2 if you're somehow touching both.): int, numDashes: int, dashTimer (how long until you're able to dash): float, stamina (how long you can stay wall climbing): int, currentState (what is the player currently doing?): string}
+ * levelData: {
  * tileSize: float[2], the width and height for the solids' hitboxes.
+ * levelSize: float[2], how big the level is (in width and height).
+ * levelOffset: float[2], where the level starts (subtract this from coordinates to get their local position)
  * goal: float[2], indicates the goal for the player to reach. Updates on a new level transition.
  * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
  * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size.
  * hazards: List<object>, array of objects that kill on collision {position: float[2], size: float[2]}
  * entities: List<object>, array of miscellaneous entities that have a variety of purposes. For Forsaken city, this stores springs and strawberries: {position: float[2], size: float[2], type: string}. If a strawberry, it also has a "winged" property.
  * levelName: The name of the current level/screen you're on.
+ * }
  * time: The amount of time that has passed since the game has started. This will not advance while awaiting output from python scripts.
  */
 namespace ProgrammingPlaysCeleste
@@ -36,6 +40,7 @@ namespace ProgrammingPlaysCeleste
         private static float[] size;
         private static Dictionary<string, object> jsonData;
         private static Dictionary<string, object> playerData;
+        private static Dictionary<string, object> levelData;
         private static List<float[]> solids;
         private static List<object> hazards;
         private static List<object> platforms;
@@ -48,6 +53,7 @@ namespace ProgrammingPlaysCeleste
         static GameReader() {
             position = new float[2];
             jsonData = new Dictionary<string, object>();
+            levelData = new Dictionary<string, object>();
             solids = new List<float[]>();
             hazards = new List<object>();
             platforms = new List<object>();
@@ -104,9 +110,9 @@ namespace ProgrammingPlaysCeleste
 
         public static void Cleanup() {
             // Remove the solids if they've already been sent (we do this once per level load, otherwise it's a constant stream of unnecessary data the user already knows)
-            if (jsonData.ContainsKey("solids"))
+            if (levelData.ContainsKey("solids"))
             {
-                jsonData.Remove("solids");
+                levelData.Remove("solids");
             }
         }
 
@@ -116,7 +122,7 @@ namespace ProgrammingPlaysCeleste
 
         private static void LevelBeginGetData(On.Celeste.Level.orig_Begin orig, Level self) {
             orig(self);
-            jsonData["tileSize"] = new float[] { self.SolidTiles.Grid.CellWidth, self.SolidTiles.Grid.CellHeight };
+            levelData["tileSize"] = new float[] { self.SolidTiles.Grid.CellWidth, self.SolidTiles.Grid.CellHeight };
         }
 
         private static void GetLevelData(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
@@ -138,13 +144,13 @@ namespace ProgrammingPlaysCeleste
                 for (int y = top; y <= bottom; ++y)
                 {
                     if (g[x, y]) {
-                        solids.Add(new float[] { x * g.CellWidth + g.AbsolutePosition.X, y * g.CellHeight + g.AbsolutePosition.Y });
+                        solids.Add(new float[] { x * g.CellWidth + g.AbsoluteLeft, y * g.CellHeight + g.AbsoluteTop });
                     }
                 }
             }
 
 
-            jsonData["solids"] = solids;
+            levelData["solids"] = solids;
 
             Vector2 goal = new Vector2(0, 0);
             // TODO: Revise heavily. This is a pretty hack-y workaround to find the next place to go to.
@@ -167,9 +173,14 @@ namespace ProgrammingPlaysCeleste
                     }
                 }
             }
-            jsonData["goal"] = new float[] { goal.X, goal.Y };
+            levelData["goal"] = new float[] { goal.X, goal.Y };
 
-            jsonData["levelName"] = "lvl_" + self.Session.Level;
+            levelData["name"] = "lvl_" + self.Session.Level;
+
+            levelData["levelSize"] = new float[] { self.Bounds.Width, self.Bounds.Height };
+            levelData["levelOffset"] = new float[] { self.LevelOffset.X, self.LevelOffset.Y };
+
+            jsonData["levelData"] = levelData;
         }
 
 
@@ -210,9 +221,10 @@ namespace ProgrammingPlaysCeleste
                     }
                 }
             }
-            jsonData["hazards"] = hazards;
-            jsonData["platforms"] = platforms;
-            jsonData["entities"] = entities;
+            levelData["hazards"] = hazards;
+            levelData["platforms"] = platforms;
+            levelData["entities"] = entities;
+            jsonData["levelData"] = levelData;
         }
 
         private delegate bool DWallJumpCheck(Player player, int dir);
