@@ -13,6 +13,10 @@ def new_level(data, debug_print):
 
     # Visualizing the current level/screen as a scatter plot (assuming you have the matplotlib library):
     solids = data["levelData"]["solids"]
+
+    # Just so you see how coordinates are set up:
+    debug_print(data["levelData"]["levelOffset"], data["levelData"]["levelSize"])
+    debug_print(solids[0], solids[1], solids[2])
     
     x = []
     y = []
@@ -34,7 +38,7 @@ def update(data, debug_print):
     # BASIC INFORMATION
     # Print the data we're given. DON'T EVER USE PRINT().
     # We can see a copy of the statements from debug_print in your Celeste Directory/code_log.txt
-    #debug_print(data)
+    debug_print(data)
     # If you want some delay to read console information:
     #time.sleep(0.01)
 
@@ -51,7 +55,6 @@ def update(data, debug_print):
     # You'll notice adding R (right) to the inputs will cause the player to move right.
     # Adding U (Up) to the inputs however, results in no changes, because divisions.ini doesn't allow code in the head folder to use up. 
     return_str = "RU"
-    debug_print(data["player"]["isJumping"])
 
     # We need to reset jumping every time we die (try holding down the jump button in celeste, dying, and then keep holding jump. Nothing will happen.)
     # Time resets after death, and so we wait to apply inputs until after we've respawned.
@@ -63,6 +66,5 @@ def update(data, debug_print):
             want_to_jump = False
         else:
             want_to_jump = True
-    debug_print(return_str)
     # Continually go to the right (and jump if we can):
     return return_str
