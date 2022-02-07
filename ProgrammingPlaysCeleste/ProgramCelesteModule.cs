@@ -8,8 +8,8 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Data for easily turning the solids array into a grid (subtract levelOffset from x and y? And maybe include width and height of level?)
- * Add options in the python script to set a new combination every time you reload (TEST IF THIS WORKS)
+ * Add hotkey to restart the chapter and reload the game
+ * Test that combinations work
  * Make tutorials for how to use all of this
  * Interest survey out by 2/13?
  * Draft and tutorials done by 2/20?

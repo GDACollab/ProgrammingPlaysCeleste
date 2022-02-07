@@ -23,7 +23,7 @@ using System.Threading.Tasks;
  * levelOffset: float[2], where the level starts (subtract this from coordinates to get their local position)
  * goal: float[2], indicates the goal for the player to reach. Updates on a new level transition.
  * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
- * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size.
+ * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size. If it's a ZipMover (traffic light), it also has a "target" float[2] property to show where it will go.
  * hazards: List<object>, array of objects that kill on collision {position: float[2], size: float[2]}
  * entities: List<object>, array of miscellaneous entities that have a variety of purposes. For Forsaken city, this stores springs and strawberries: {position: float[2], size: float[2], type: string}. If a strawberry, it also has a "winged" property.
  * name: The name of the current level/screen you're on.
@@ -49,6 +49,7 @@ namespace ProgrammingPlaysCeleste
         private static readonly DWallJumpCheck WallJumpCheck;
         private static readonly FieldInfo dashCooldownTimer;
         private static readonly FieldInfo jumpTimer;
+        private static readonly FieldInfo target;
         
         static GameReader() {
             position = new float[2];
@@ -62,6 +63,7 @@ namespace ProgrammingPlaysCeleste
 
             dashCooldownTimer = typeof(Player).GetField("dashCooldownTimer", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             jumpTimer = typeof(Player).GetField("varJumpTimer", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            target = typeof(ZipMover).GetField("target", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
             MethodInfo wallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             WallJumpCheck = (DWallJumpCheck)wallJumpCheck.CreateDelegate(typeof(DWallJumpCheck));
@@ -204,6 +206,10 @@ namespace ProgrammingPlaysCeleste
                         platform.Add("position", new float[] { p.Center.X, p.Center.Y });
                         platform.Add("size", new float[] { p.Collider.Width, p.Collider.Height });
                         platform.Add("type", e.GetType().ToString());
+                        if (e.GetType() == typeof(ZipMover)) {
+                            Vector2 eTarget = (Vector2)target.GetValue(e);
+                            platform.Add("target", new float[] { eTarget.X, eTarget.Y });
+                        }
                         platforms.Add(platform);
                     }
 
