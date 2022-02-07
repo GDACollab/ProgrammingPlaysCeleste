@@ -135,12 +135,20 @@ namespace ProgrammingPlaysCeleste
                 {
                     // We keep reading until we get the OK from the main.py script:
                     string input = "";
-                    while (!input.Contains("--END OF INPUT STRING--")) {
+                    while (!input.Contains("--START OF INPUT STRING--")) {
                         input += movementScripts.StandardOutput.ReadLine();
                     }
-                    input = input.Replace("--END OF INPUT STRING--", "");
-                    input = input.Replace("\n", "");
-                    StringToInput(input);
+
+                    int inputStartIndex = input.IndexOf("--START OF INPUT STRING--");
+                    string startInput = input.Substring(inputStartIndex, input.Length - 1);
+
+                    while (!startInput.Contains("--END OF INPUT STRING--")) {
+                        startInput+= movementScripts.StandardOutput.ReadLine();
+                    }
+                    startInput = startInput.Replace("--START OF INPUT STRING--", "");
+                    startInput = startInput.Replace("--END OF INPUT STRING--", "");
+                    startInput = startInput.Replace("\n", "");
+                    StringToInput(startInput);
                     orig(self, gameTime);
                 }
                 else {

@@ -56,6 +56,9 @@ def update(data, debug_print):
     # Adding U (Up) to the inputs however, results in no changes, because divisions.ini doesn't allow code in the head folder to use up. 
     return_str = "RU"
 
+    # You'll notice that if we print something, it won't show up anywhere or influence the game (so use debug_print!):
+    print("I AM JUMPING JUMPING JUMPING WHEEEE X")
+
     # We need to reset jumping every time we die (try holding down the jump button in celeste, dying, and then keep holding jump. Nothing will happen.)
     # Time resets after death, and so we wait to apply inputs until after we've respawned.
     if data["player"]["currentState"] != "Player.StIntroRespawn" and data["player"]["onGround"] or data["player"]["jumpTimer"] > 0:

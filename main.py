@@ -186,7 +186,7 @@ while (1):
     except:
         debug_print("ERROR: DATA SUPPLIED IS NOT FORMATTED AS A JSON.")
 
-    print_string = ""
+    print_string = "--START OF INPUT STRING--"
 
     for item in scripts:
         # This is where we call the output of every script that's currently loaded:
