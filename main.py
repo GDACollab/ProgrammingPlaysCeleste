@@ -17,10 +17,7 @@ base_path = os.getcwd()
 if "\\Mods\\ProgrammingPlaysCeleste" not in base_path:
     base_path += "\\Mods\\ProgrammingPlaysCeleste"
 
-print(base_path)
-
 parser.read(base_path + "\\divisions.ini")
-print(parser)
 
 divisions = parser["Input Divisions"]
 
@@ -62,7 +59,7 @@ def get_combo(combo_path):
     scripts_to_load = combos[combo_to_remove].split(",")
     f.close()
     # So we can restart the process once we've gone through all combos:
-    if combo_to_remove == len(combos) - 1:
+    if len(combos) == 1:
         os.remove(combo_path)
     curr_line = 0
 
@@ -95,9 +92,8 @@ def write_all_combos(combo_path):
     # This should give us all the possible combinations of the scripts without repetition.
 
     f = open(combo_path, "w")
-    last_digit = total_scripts_i[len(total_scripts) - 1]
-    curr_digit = 0
-    while last_digit < len(total_scripts[len(total_scripts) - 1]):
+    while True:
+
         # Write all current possibilities:
         for i in range(len(total_scripts)):
             to_write = total_scripts[i][total_scripts_i[i]]
@@ -106,15 +102,27 @@ def write_all_combos(combo_path):
             f.write(to_write)
         f.write("\n")
 
+        should_break = True
+        for i in range(len(total_scripts_i)):
+            if total_scripts_i[i] < len(total_scripts[i]) -1:
+                should_break = False
+        if should_break:
+            break
+        
+        curr_digit = 0
+
         # Then increment:
         while True:
-            total_scripts_i[curr_digit] += 1
+            if curr_digit >= len(total_scripts):
+                break
 
-            if curr_digit != len(total_scripts) -1 and total_scripts_i[curr_digit] > len(total_scripts[curr_digit]) - 1:
+            total_scripts_i[curr_digit] += 1
+            if total_scripts_i[curr_digit] >= len(total_scripts[curr_digit]):
+                if curr_digit >= len(total_scripts) - 1:
+                    break
                 total_scripts_i[curr_digit] = 0
                 curr_digit += 1
             else:
-                curr_digit = 0
                 break
     f.close()
     get_combo(combo_path)
@@ -143,20 +151,21 @@ else:
             else:
                 script_path = base_path + "\\" + item[1] + "\\" + selected_script
             if len(script_path) > 0:
-                scripts_to_load.append({"path": script_path, "allowed": item[0]})
+                scripts_to_load.append(script_path)
 
 scripts = []
-for script in scripts_to_load:
-    spec = importlib.util.spec_from_file_location(os.path.basename(script["path"]), script["path"])
+for i in range(len(scripts_to_load)):
+    script = scripts_to_load[i].replace("\n", "")
+    spec = importlib.util.spec_from_file_location(os.path.basename(script), script)
     module = importlib.util.module_from_spec(spec)
-    sys.modules[os.path.basename(script["path"])] = module
+    sys.modules[os.path.basename(script)] = module
     # Init code for all the modules (so if you have a script in one of the folders, this is where your code gets initialized):
     spec.loader.exec_module(module)
 
     inputs_allowed = []
 
-    for allowed_input in script["allowed"]:
-        inputs_allowed.append(allowed.get(allowed_input))
+    for item in divisions_arr[i][0]:
+        inputs_allowed.append(allowed.get(item))
 
     scripts.append({"module": module, "allowed_inputs": inputs_allowed})
 

@@ -8,8 +8,6 @@ using System;
 using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
- * Add hotkey to restart the chapter and reload the game
- * Test that combinations work
  * Make tutorials for how to use all of this
  * Interest survey out by 2/13?
  * Draft and tutorials done by 2/20?
