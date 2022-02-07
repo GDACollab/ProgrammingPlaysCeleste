@@ -5,7 +5,6 @@ using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
-using Celeste.Mod.UI;
 /*
  * Let's make some TODOs:
  * Make tutorials for how to use all of this
@@ -14,7 +13,6 @@ using Celeste.Mod.UI;
  * Publish repository by 2/20?
  * To POLISH:
  * Acutally initialize the code for searching for goals to avoid spending more processing time on it.
- * Filter output from python to only accept print statements from main.py (maybe like a header before the print statement?)
  * Test this works with Mac and Linux computers
  * Set goal to end level trigger on the final level
  */
