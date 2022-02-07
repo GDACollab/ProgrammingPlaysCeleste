@@ -7,7 +7,9 @@ using Monocle;
 using System;
 /*
  * Let's make some TODOs:
+ * Make storage of coordinates consistent (Some are in the center, but some are not I think?)
  * Make tutorials for how to use all of this
+ * IMAGES!
  * Interest survey out by 2/13?
  * Draft and tutorials done by 2/20?
  * Publish repository by 2/20?

@@ -14,8 +14,6 @@ using System.Threading.Tasks;
 // A lot of this is modified code from https://github.com/EverestAPI/CelesteTAS-EverestInterop
 
 /* JSON Summary:
- * playerPos: float[2], indicates player position (The center of where they are)
- * playerSize: float[2], indicates player hitbox size (X, Y).
  * player: Dictionary<string, object>, {position: float[2], size: float[2], speed: float[2], onGround: bool, jumpTimer (how long you can continue to hold the jump button for): float, wallJump (if you can wall jump or climb. -1 is left facing wall, 1 is right facing wall, 2 if you're somehow touching both.): int, numDashes: int, dashTimer (how long until you're able to dash): float, stamina (how long you can stay wall climbing): int, currentState (what is the player currently doing?): string, dead: bool}
  * levelData: {
  * tileSize: float[2], the width and height for the solids' hitboxes.

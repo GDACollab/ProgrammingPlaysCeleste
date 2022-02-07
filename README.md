@@ -1,6 +1,9 @@
 # Programming Plays Celeste
 Control Celeste WITH THE POWER OF YOUR MIND.
 
+![](assets/forsakencity.png)
+![](assets/forsakencityvisualized.png)
+
 Or a close alternative. This was inspired by watching that [amazing Celeste TAS run a few years back](https://www.youtube.com/watch?v=BEcv7BD1q9o). In that spirit, this repository has been HEAVILY based on the CelesteTAS-EverestInterop repository: https://github.com/EverestAPI/CelesteTAS-EverestInterop
 
 There are three major differences though:
