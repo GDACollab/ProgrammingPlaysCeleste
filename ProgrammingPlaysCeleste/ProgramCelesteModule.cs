@@ -15,6 +15,7 @@ using System;
  * Publish repository by 2/20?
  * To POLISH:
  * Acutally initialize the code for searching for goals to avoid spending more processing time on it.
+ * Figure out some way to execute the local OS terminal instead of python (that way, when python crashes, the terminal stays open)
  * Test this works with Mac and Linux computers
  * Set goal to end level trigger on the final level
  */
@@ -34,6 +35,15 @@ namespace ProgrammingPlaysCeleste
     public class ProgramCelesteModule : EverestModule
     {
         static Process movementScripts;
+        private readonly ProcessStartInfo movementStartInfo = new ProcessStartInfo("python", @"./Mods/ProgrammingPlaysCeleste/main.py")
+        {
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            CreateNoWindow = false
+        };
+
+        bool scriptReady = false;
 
         HashSet<Inputs> activeInputs;
 
@@ -43,10 +53,24 @@ namespace ProgrammingPlaysCeleste
         {
             Engine.Commands.FunctionKeyActions[9] = () =>
             {
-                Logger.Log("Programming Plays Celeste", currLevel[0].ToString());
-                if (currLevel != "" && MInput.Keyboard.Check(Microsoft.Xna.Framework.Input.Keys.LeftControl)) {
-                    SaveData.Instance.CurrentSession = new Session(new AreaKey((int)Char.GetNumericValue(currLevel[0]), SaveData.Instance.CurrentSession.Area.Mode));
-                    Everest.QuickFullRestart();
+                if (currLevel != "" && Engine.Scene is Level level) {
+                    if (!movementScripts.HasExited) {
+                        movementScripts.Kill();
+                    }
+
+                    movementScripts.Start();
+                    scriptReady = false;
+
+                    if (MInput.Keyboard.Check(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+                    {
+                        SaveData.Instance.CurrentSession = new Session(new AreaKey((int)Char.GetNumericValue(currLevel[0]), SaveData.Instance.CurrentSession.Area.Mode));
+                        Engine.Scene = new LevelLoader(SaveData.Instance.CurrentSession);
+                        
+                    }
+                    else {
+                        // We have to treat the game as if we've just reloaded the level:
+                        GameReader.GetLevelData((Level self, Player.IntroTypes intro, bool fromLoader) => { return; }, level, default, default);
+                    }
                 }
             };
         }
@@ -55,12 +79,7 @@ namespace ProgrammingPlaysCeleste
             On.Monocle.Engine.Update += UpdateGame;
             On.Monocle.MInput.Update += UpdateInput;
 
-            movementScripts = Process.Start(new ProcessStartInfo("python", @"./Mods/ProgrammingPlaysCeleste/main.py") {
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                CreateNoWindow = false
-            });
+            movementScripts = Process.Start(movementStartInfo);
 
             activeInputs = new HashSet<Inputs>();
 
@@ -130,8 +149,13 @@ namespace ProgrammingPlaysCeleste
                 movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
                 GameReader.Cleanup();
 
-                // Unless the program has been closed, we continue to read from it:
-                if (!movementScripts.StandardOutput.EndOfStream)
+                if (!scriptReady) {
+                    string input = movementScripts.StandardOutput.ReadLine();
+                    if (input.Contains("--READY--")) {
+                        scriptReady = true;
+                    }
+                }
+                if (!movementScripts.StandardOutput.EndOfStream) // Unless the program has been closed, we continue to read from it:
                 {
                     // We keep reading until we get the OK from the main.py script:
                     string input = "";
