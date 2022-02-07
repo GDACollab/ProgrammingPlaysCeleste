@@ -143,37 +143,33 @@ else:
             else:
                 script_path = base_path + "\\" + item[1] + "\\" + selected_script
             if len(script_path) > 0:
-                scripts_to_load.append(script_path)
+                scripts_to_load.append({"path": script_path, "allowed": item[0]})
 
 scripts = []
 for script in scripts_to_load:
-    spec = importlib.util.spec_from_file_location(os.path.basename(script), script)
+    spec = importlib.util.spec_from_file_location(os.path.basename(script["path"]), script["path"])
     module = importlib.util.module_from_spec(spec)
-    sys.modules[os.path.basename(script)] = module
+    sys.modules[os.path.basename(script["path"])] = module
     # Init code for all the modules (so if you have a script in one of the folders, this is where your code gets initialized):
     spec.loader.exec_module(module)
 
     inputs_allowed = []
 
-    for allowed_input in item[0]:
+    for allowed_input in script["allowed"]:
         inputs_allowed.append(allowed.get(allowed_input))
 
     scripts.append({"module": module, "allowed_inputs": inputs_allowed})
-
-error_log = open("code_log.txt", "w")
 
 # Three: Create some debug printing options. YOU SHOULD NOT BE USING PRINT(). Just going to have to hope that people don't use print(), because I can't find a way to override it
 # in a way that also allows the mod to intercept stdout.
 def debug_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
-    print(*args, file=error_log)
 
 # Hack-y way around this. Not sure how to communicate directly from C# to python, so we'll just use console input.
 while (1):
     json_input = input()
     # So we can close the relevant stuff when we're done:
     if json_input == "FINISHED":
-        error_log.close()
         break
 
     try:

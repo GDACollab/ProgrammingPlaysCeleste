@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 /* JSON Summary:
  * playerPos: float[2], indicates player position (The center of where they are)
  * playerSize: float[2], indicates player hitbox size (X, Y).
- * player: Dictionary<string, object>, {position: float[2], size: float[2], speed: float[2], onGround: bool, jumpTimer (how long you can continue to hold the jump button for): float, wallJump (if you can wall jump or climb. -1 is left facing wall, 1 is right facing wall, 2 if you're somehow touching both.): int, numDashes: int, dashTimer (how long until you're able to dash): float, stamina (how long you can stay wall climbing): int, currentState (what is the player currently doing?): string}
+ * player: Dictionary<string, object>, {position: float[2], size: float[2], speed: float[2], onGround: bool, jumpTimer (how long you can continue to hold the jump button for): float, wallJump (if you can wall jump or climb. -1 is left facing wall, 1 is right facing wall, 2 if you're somehow touching both.): int, numDashes: int, dashTimer (how long until you're able to dash): float, stamina (how long you can stay wall climbing): int, currentState (what is the player currently doing?): string, dead: bool}
  * levelData: {
  * tileSize: float[2], the width and height for the solids' hitboxes.
  * levelSize: float[2], how big the level is (in width and height).
@@ -26,7 +26,7 @@ using System.Threading.Tasks;
  * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size.
  * hazards: List<object>, array of objects that kill on collision {position: float[2], size: float[2]}
  * entities: List<object>, array of miscellaneous entities that have a variety of purposes. For Forsaken city, this stores springs and strawberries: {position: float[2], size: float[2], type: string}. If a strawberry, it also has a "winged" property.
- * levelName: The name of the current level/screen you're on.
+ * name: The name of the current level/screen you're on.
  * }
  * time: The amount of time that has passed since the game has started. This will not advance while awaiting output from python scripts.
  */
@@ -100,6 +100,7 @@ namespace ProgrammingPlaysCeleste
                 playerData["wallJump"] = canJump;
                 playerData["stamina"] = player.Stamina;
                 playerData["speed"] = new float[] { player.Speed.X, player.Speed.Y };
+                playerData["dead"] = player.Dead;
                 jsonData["player"] = playerData;
             }
 
