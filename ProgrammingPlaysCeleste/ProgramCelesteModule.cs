@@ -164,7 +164,7 @@ namespace ProgrammingPlaysCeleste
                     }
 
                     int inputStartIndex = input.IndexOf("--START OF INPUT STRING--");
-                    string startInput = input.Substring(inputStartIndex, input.Length - 1);
+                    string startInput = input.Substring(inputStartIndex);
 
                     while (!startInput.Contains("--END OF INPUT STRING--")) {
                         startInput+= movementScripts.StandardOutput.ReadLine();

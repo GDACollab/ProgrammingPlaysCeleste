@@ -61,14 +61,15 @@ def get_combo(combo_path):
     # So we can restart the process once we've gone through all combos:
     if len(combos) == 1:
         os.remove(combo_path)
-    curr_line = 0
+    else:
+        curr_line = 0
 
-    # Go through the file, write all files except for the combination we picked.
-    with open(combo_path, "w") as fw:
-        for line in combos:
-            if  curr_line != combo_to_remove:
-                fw.write(line)
-            curr_line += 1
+        # Go through the file, write all files except for the combination we picked.
+        with open(combo_path, "w") as fw:
+            for line in combos:
+                if  curr_line != combo_to_remove:
+                    fw.write(line)
+                curr_line += 1
         
 def write_all_combos(combo_path):
     global divisions_arr
