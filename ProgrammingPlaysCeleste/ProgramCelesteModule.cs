@@ -39,6 +39,20 @@ namespace ProgrammingPlaysCeleste
 
         HashSet<Inputs> activeInputs;
 
+        public static string currLevel = "";
+
+        public override void Initialize()
+        {
+            Engine.Commands.FunctionKeyActions[9] = () =>
+            {
+                Logger.Log("Programming Plays Celeste", currLevel[0].ToString());
+                if (currLevel != "" && MInput.Keyboard.Check(Microsoft.Xna.Framework.Input.Keys.LeftControl)) {
+                    SaveData.Instance.CurrentSession = new Session(new AreaKey((int)Char.GetNumericValue(currLevel[0]), SaveData.Instance.CurrentSession.Area.Mode));
+                    Everest.QuickFullRestart();
+                }
+            };
+        }
+
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
             On.Monocle.MInput.Update += UpdateInput;
@@ -113,6 +127,7 @@ namespace ProgrammingPlaysCeleste
         private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
             if (Engine.Scene is Level level)
             {
+                currLevel = level.Session.MapData.Filename;
                 GameReader.FrameUpdate(level);
                 movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
                 GameReader.Cleanup();
