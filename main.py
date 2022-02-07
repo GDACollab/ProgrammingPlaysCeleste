@@ -174,6 +174,9 @@ for i in range(len(scripts_to_load)):
 def debug_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+# So the mod knows that we're ready to continue:
+print("--READY--")
+
 # Hack-y way around this. Not sure how to communicate directly from C# to python, so we'll just use console input.
 while (1):
     json_input = input()
