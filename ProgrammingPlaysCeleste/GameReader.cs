@@ -25,7 +25,7 @@ using System.Threading.Tasks;
  * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
  * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size. If it's a ZipMover (traffic light), it also has a "target" float[2] property to show where it will go.
  * hazards: List<object>, array of objects that kill on collision {position: float[2], size: float[2]}
- * entities: List<object>, array of miscellaneous entities that have a variety of purposes. For Forsaken city, this stores springs and strawberries: {position: float[2], size: float[2], type: string}. If a strawberry, it also has a "winged" property.
+ * entities: List<object>, array of miscellaneous entities that have a variety of purposes. For Forsaken city, this stores springs, refills, and strawberries: {position: float[2], size: float[2], type: string}. If a strawberry, it also has a "winged" property.
  * name: The name of the current level/screen you're on.
  * }
  * time: The amount of time that has passed since the game has started. This will not advance while awaiting output from python scripts.
@@ -213,9 +213,9 @@ namespace ProgrammingPlaysCeleste
                         platforms.Add(platform);
                     }
 
-                    // This is probably where more work is going to be required for adding support to other levels. I'm not sure of all the types, but I know Spring and Strawberry
+                    // This is probably where more work is going to be required for adding support to other levels. I'm not sure of all the types, but I know Spring, Refill, and Strawberry
                     // are the ones that show up in Forsaken City.
-                    if (e.GetType() == typeof(Spring) || e.GetType() == typeof(Strawberry) || e.GetType() == typeof(Key)) {
+                    if (e.GetType() == typeof(Spring) || e.GetType() == typeof(Strawberry) || e.GetType() == typeof(Refill) || e.GetType() == typeof(Key)) {
                         Dictionary<string, object> entity = new Dictionary<string, object>();
                         entity.Add("position", new float[] { e.Center.X, e.Center.Y });
                         entity.Add("size", new float[] { e.Collider.Width, e.Collider.Height });
