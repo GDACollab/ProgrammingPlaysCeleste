@@ -9,7 +9,6 @@ using System;
  * TODO:
  * Figure out some way to execute the local OS terminal instead of python (that way, when python crashes, the terminal stays open)
  * Test this works with Mac and Linux computers
- * Set goal to end level trigger on the final level
  */
 
 namespace ProgrammingPlaysCeleste

@@ -13,9 +13,8 @@ lvl_8
 lvl_8b
 lvl_9
 lvl_9b
-lvl_10
+lvl_10a
 lvl_11
 lvl_12
 lvl_12a
-lvl_12z
 lvl_end
