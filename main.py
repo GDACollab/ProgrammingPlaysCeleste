@@ -8,7 +8,12 @@ import json
 
 # We need to do a few things.
 
-# One: Load in the configuration settings to get the allowed inputs and division of scripts into files.
+# One: Create some debug printing options. YOU SHOULD NOT BE USING PRINT(). Just going to have to hope that people don't use print(), because I can't find a way to override it
+# in a way that also allows the mod to intercept stdout.
+def debug_print(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+# Two: Load in the configuration settings to get the allowed inputs and division of scripts into files.
 
 parser = configparser.ConfigParser()
 
@@ -33,7 +38,7 @@ for division in divisions:
         divisions_arr.append([])
         divisions_arr[i].append(divisions[division].split(","))
 
-# Two: Load in the relevant scripts based on folder names.
+# Three: Load in the relevant scripts based on folder names.
 # Because we want for there to be multiple scripts allowed in each folder, we have additional config options.
 
 scripts_to_load = []
@@ -60,7 +65,10 @@ def get_combo(combo_path):
     f.close()
     # So we can restart the process once we've gone through all combos:
     if len(combos) == 1:
+        debug_print("END OF COMBOS.")
         os.remove(combo_path)
+        # We can close the console, because whoever's using combos probably wants the process to stop:
+        exit()
     else:
         curr_line = 0
 
@@ -157,6 +165,7 @@ else:
 scripts = []
 for i in range(len(scripts_to_load)):
     script = scripts_to_load[i].replace("\n", "")
+    debug_print("Loading script: " + script)
     spec = importlib.util.spec_from_file_location(os.path.basename(script), script)
     module = importlib.util.module_from_spec(spec)
     sys.modules[os.path.basename(script)] = module
@@ -169,11 +178,6 @@ for i in range(len(scripts_to_load)):
         inputs_allowed.append(allowed.get(item))
 
     scripts.append({"module": module, "allowed_inputs": inputs_allowed})
-
-# Three: Create some debug printing options. YOU SHOULD NOT BE USING PRINT(). Just going to have to hope that people don't use print(), because I can't find a way to override it
-# in a way that also allows the mod to intercept stdout.
-def debug_print(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
 # So the mod knows that we're ready to continue:
 print("--READY--")
