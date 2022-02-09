@@ -48,6 +48,9 @@ namespace ProgrammingPlaysCeleste
         private static readonly FieldInfo dashCooldownTimer;
         private static readonly FieldInfo jumpTimer;
         private static readonly FieldInfo target;
+
+        private static int courseIndex = -1;
+        private static string[] coursePath;
         
         static GameReader() {
             position = new float[2];
@@ -124,6 +127,14 @@ namespace ProgrammingPlaysCeleste
         private static void LevelBeginGetData(On.Celeste.Level.orig_Begin orig, Level self) {
             orig(self);
             levelData["tileSize"] = new float[] { self.SolidTiles.Grid.CellWidth, self.SolidTiles.Grid.CellHeight };
+
+            courseIndex = -1;
+            string path = $"./Mods/ProgrammingPlaysCeleste/courses/{self.Session.MapData.Filename}.txt";
+            if (System.IO.File.Exists(path))
+            {
+                coursePath = System.IO.File.ReadAllLines(path);
+                courseIndex = 0;
+            }
         }
 
         public static void GetLevelData(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
@@ -154,26 +165,21 @@ namespace ProgrammingPlaysCeleste
             levelData["solids"] = solids;
 
             Vector2 goal = new Vector2(0, 0);
-            // TODO: Revise heavily. This is a pretty hack-y workaround to find the next place to go to.
-            string path = $"./Mods/ProgrammingPlaysCeleste/courses/{self.Session.MapData.Filename}.txt";
-            if (System.IO.File.Exists(path))
+            // courseIndex >= 0 if we actually have a course defined.
+            if (courseIndex >= 0 && coursePath[courseIndex] == $"lvl_{self.Session.Level}" && courseIndex != coursePath.Length - 1)
             {
-                string[] courseRoute = System.IO.File.ReadAllLines(path);
-                int index;
-                for (index = 0; courseRoute[index] != $"lvl_{self.Session.Level}" && index < courseRoute.Length; index++);
-                if (courseRoute[index] == $"lvl_{self.Session.Level}" && index != courseRoute.Length - 1) {
-                    string goalNext = courseRoute[index + 1].Replace("lvl_", "");
-                    LevelData nextLevel = self.Session.MapData.Levels.Find((LevelData data) => {
-                        return data.Name == goalNext;
-                    });
-                    if (nextLevel != null)
-                    {
-                        // Hacky workaround for finding goals based on the next level:
-                        goal = nextLevel.Spawns[0];
-                        Logger.Log("Programming Plays Celeste", $"New Goal: {goal}");
-                    }
+                string goalNext = coursePath[courseIndex + 1].Replace("lvl_", "");
+                LevelData nextLevel = self.Session.MapData.Levels.Find((LevelData data) => {
+                    return data.Name == goalNext;
+                });
+                if (nextLevel != null)
+                {
+                    // Hacky workaround for finding goals based on the next level:
+                    goal = nextLevel.Spawns[0];
+                    Logger.Log("Programming Plays Celeste", $"New Goal: {goal}");
                 }
             }
+
             levelData["goal"] = new float[] { goal.X, goal.Y };
 
             levelData["name"] = "lvl_" + self.Session.Level;

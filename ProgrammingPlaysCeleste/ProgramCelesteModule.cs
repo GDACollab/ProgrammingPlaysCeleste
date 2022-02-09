@@ -7,9 +7,6 @@ using Monocle;
 using System;
 /*
  * TODO:
- * Make storage of coordinates consistent (Some are in the center, but some are not I think?)
- * To POLISH:
- * Acutally initialize the code for searching for goals to avoid spending more processing time on it.
  * Figure out some way to execute the local OS terminal instead of python (that way, when python crashes, the terminal stays open)
  * Test this works with Mac and Linux computers
  * Set goal to end level trigger on the final level
