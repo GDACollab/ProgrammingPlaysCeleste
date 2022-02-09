@@ -20,6 +20,7 @@ using System.Threading.Tasks;
  * levelSize: float[2], how big the level is (in width and height).
  * levelOffset: float[2], where the level starts (subtract this from coordinates to get their local position)
  * goal: float[2], indicates the goal for the player to reach. Updates on a new level transition.
+ * end: float[2], the actual end point for the level. Goal is localized to the current screen, end shows the end of the entire level.
  * solids: List<float[]>, array of solid tile positions (the center of where they are). Updates on a new level position.
  * platforms: List<object>, array of objects {position: float[2], size: float[2], type: string} to show platforms, their position (the center of where they are), and size indicates their hitbox size. If it's a ZipMover (traffic light), it also has a "target" float[2] property to show where it will go.
  * hazards: List<object>, array of objects that kill on collision {position: float[2], size: float[2]}
@@ -68,16 +69,16 @@ namespace ProgrammingPlaysCeleste
 
             MethodInfo wallJumpCheck = typeof(Player).GetMethod("WallJumpCheck", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             WallJumpCheck = (DWallJumpCheck)wallJumpCheck.CreateDelegate(typeof(DWallJumpCheck));
+
+            courseIndex = -1;
         }
 
         public static void Load() {
             On.Celeste.Level.LoadLevel += GetLevelData;
-            On.Celeste.Level.Begin += LevelBeginGetData;
         }
 
         public static void Unload() {
             On.Celeste.Level.LoadLevel -= GetLevelData;
-            On.Celeste.Level.Begin -= LevelBeginGetData;
         }
 
         public static void FrameUpdate(Level activeLevel) {
@@ -124,20 +125,8 @@ namespace ProgrammingPlaysCeleste
             return JsonConvert.SerializeObject(jsonData);
         }
 
-        private static void LevelBeginGetData(On.Celeste.Level.orig_Begin orig, Level self) {
-            orig(self);
-            levelData["tileSize"] = new float[] { self.SolidTiles.Grid.CellWidth, self.SolidTiles.Grid.CellHeight };
-
-            courseIndex = -1;
-            string path = $"./Mods/ProgrammingPlaysCeleste/courses/{self.Session.MapData.Filename}.txt";
-            if (System.IO.File.Exists(path))
-            {
-                coursePath = System.IO.File.ReadAllLines(path);
-                courseIndex = 0;
-            }
-        }
-
         public static void GetLevelData(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
+            Logger.Log("Programming Plays Celeste", "GET");
             orig(self, playerIntro, isFromLoader);
             SolidTiles tiles = self.SolidTiles;
             Grid g = tiles.Grid;
@@ -164,19 +153,72 @@ namespace ProgrammingPlaysCeleste
 
             levelData["solids"] = solids;
 
-            Vector2 goal = new Vector2(0, 0);
-            // courseIndex >= 0 if we actually have a course defined.
-            if (courseIndex >= 0 && coursePath[courseIndex] == $"lvl_{self.Session.Level}" && courseIndex != coursePath.Length - 1)
-            {
-                string goalNext = coursePath[courseIndex + 1].Replace("lvl_", "");
-                LevelData nextLevel = self.Session.MapData.Levels.Find((LevelData data) => {
-                    return data.Name == goalNext;
+            levelData["tileSize"] = new float[] { self.SolidTiles.Grid.CellWidth, self.SolidTiles.Grid.CellHeight };
+
+            Vector2 end = Vector2.Zero;
+
+            List<LevelData> endLevels = self.Session.MapData.Levels.FindAll((data) => {
+                return data.Name.Contains("end");
+            });
+
+            endLevels.ForEach((endLevel) => {
+                EntityData endTrigger = endLevel.Triggers.Find((trigger) => {
+                    Logger.Log("Programming Plays Celeste", trigger.Name + " " + trigger.Has("Event"));
+                    if (trigger.Values != default)
+                    {
+                        foreach (KeyValuePair<string, object> k in trigger.Values)
+                        {
+                            Logger.Log("Programming Plays Celeste", k.Key + " " + k.Value.ToString());
+                        }
+                    }
+                    return trigger.Name == "eventTrigger" && trigger.Has("event") && trigger.Attr("event").Contains("end");
                 });
-                if (nextLevel != null)
+
+                if (endTrigger != default)
                 {
-                    // Hacky workaround for finding goals based on the next level:
-                    goal = nextLevel.Spawns[0];
-                    Logger.Log("Programming Plays Celeste", $"New Goal: {goal}");
+                    end = endTrigger.Position + endLevel.Position;
+                }
+            });
+
+            levelData["end"] = new float[] { end.X, end.Y };
+
+            Vector2 goal = new Vector2(0, 0);
+
+            if (courseIndex == -1) {
+                string path = $"./Mods/ProgrammingPlaysCeleste/courses/{self.Session.MapData.Filename}.txt";
+                if (System.IO.File.Exists(path))
+                {
+                    coursePath = System.IO.File.ReadAllLines(path);
+                    for (int i = 0; i < coursePath.Length; i++)
+                    {
+                        if (coursePath[i].Replace("lvl_", "") == self.Session.Level)
+                        {
+                            courseIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // courseIndex >= 0 if we actually have a course defined.
+            if (courseIndex >= 0 && coursePath[courseIndex] == $"lvl_{self.Session.Level}")
+            {
+                if (courseIndex == coursePath.Length - 1)
+                {
+                    goal = end;
+                }
+                else {
+                    string goalNext = coursePath[courseIndex + 1].Replace("lvl_", "");
+                    LevelData nextLevel = self.Session.MapData.Levels.Find((LevelData data) => {
+                        return data.Name == goalNext;
+                    });
+
+                    if (nextLevel != null)
+                    {
+                        // Hacky workaround for finding goals based on the next level:
+                        goal = nextLevel.Spawns[0];
+                        Logger.Log("Programming Plays Celeste", $"New Goal: {goal}");
+                    }
                 }
             }
 
