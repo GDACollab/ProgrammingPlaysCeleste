@@ -32,8 +32,7 @@ namespace ProgrammingPlaysCeleste
         CancellationTokenSource cts;
         StreamWriter inputWriter;
         Stream pythonInput;
-        StreamReader outputReader;
-        Stream pythonOutput;
+        StringBuilder pythonOutput;
 
         bool scriptReady = false;
 
@@ -75,15 +74,11 @@ namespace ProgrammingPlaysCeleste
             inputWriter.AutoFlush = true;
             PipeSource source = PipeSource.FromStream(pythonInput, true);
 
-            pythonOutput = new MemoryStream();
-            outputReader = new StreamReader(pythonOutput);
-            PipeTarget target = PipeTarget.ToStream(pythonOutput);
+            pythonOutput = new StringBuilder();
 
-            var cmd = Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithStandardInputPipe(source).WithWorkingDirectory(Directory.GetCurrentDirectory());
-            cmd.WithStandardOutputPipe(target).WithStandardErrorPipe(target);
-            var executed = cmd.ExecuteAsync();
+            var cmd = Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithStandardInputPipe(source).WithWorkingDirectory(Directory.GetCurrentDirectory()) | pythonOutput;
+            var executed = cmd.ExecuteAsync(cts.Token);
 
-            Logger.Log("Programming Plays Celeste", outputReader.ReadToEnd());
             // The only problem (and maybe a feature to add?) Is that we need a physical window to show what's happening. I'm thinking we create our own window here that mirrors the input and outputs we recieve.
         }
 
@@ -161,8 +156,7 @@ namespace ProgrammingPlaysCeleste
                 inputWriter.WriteLine(GameReader.GetJSON());
                 GameReader.Cleanup();
 
-                pythonOutput.Position = 0;
-                Logger.Log("Programming Plays Celeste", outputReader.ReadToEnd());
+                Logger.Log("Programming Plays Celeste", pythonOutput[pythonOutput.Length - 1].ToString());
 
                 /*if (!scriptReady) {
                     if (movementScripts.StandardOutput.Contains("--READY--")) {
