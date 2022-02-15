@@ -1,12 +1,14 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
+using CliWrap.Buffered;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
-using System.Runtime.InteropServices;
 using System.IO;
+using System.Text;
+using System.Threading;
 /*
 * TODO:
 * Figure out some way to execute the local OS terminal instead of python (that way, when python crashes, the terminal stays open)
@@ -27,7 +29,10 @@ namespace ProgrammingPlaysCeleste
 
     public class ProgramCelesteModule : EverestModule
     {
-        static Process movementScripts;
+        static BufferedCommandResult movementScripts;
+        CancellationTokenSource cts;
+        StringBuilder output;
+        StringBuilder input;
 
         bool scriptReady = false;
 
@@ -40,11 +45,11 @@ namespace ProgrammingPlaysCeleste
             Engine.Commands.FunctionKeyActions[9] = () =>
             {
                 if (currLevel != "" && Engine.Scene is Level level) {
-                    if (!movementScripts.HasExited) {
-                        movementScripts.Kill();
+                    if (!(movementScripts.ExitCode == 0)) {
+                        cts.Cancel();
                     }
 
-                    movementScripts.Start();
+                    StartProcess();
                     scriptReady = false;
 
                     if (MInput.Keyboard.Check(Microsoft.Xna.Framework.Input.Keys.LeftControl))
@@ -61,34 +66,18 @@ namespace ProgrammingPlaysCeleste
             };
         }
 
+        private async void StartProcess() {
+            cts = new CancellationTokenSource();
+
+            movementScripts = await Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithWorkingDirectory(Directory.GetCurrentDirectory()).ExecuteBufferedAsync(cts.Token);
+            // The only problem (and maybe a feature to add?) Is that we need a physical window to show what's happening. I'm thinking we create our own window here that mirrors the input and outputs we recieve.
+        }
+
         public override void Load() {
             On.Monocle.Engine.Update += UpdateGame;
             On.Monocle.MInput.Update += UpdateInput;
 
-
-            ProcessStartInfo movementStartInfo;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-                movementStartInfo = new ProcessStartInfo("/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal")
-                {
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = false,
-                    CreateNoWindow = false
-                };
-
-                movementScripts = Process.Start(movementStartInfo);
-                movementScripts.StandardInput.WriteLine($@"python ./Mods/ProgrammingPlaysCeleste/main.py");
-            } else {
-                movementStartInfo = new ProcessStartInfo("python", "./Mods/ProgrammingPlaysCeleste/main.py")
-                {
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = false
-                };
-                movementScripts = Process.Start(movementStartInfo);
-            }
+            StartProcess();
 
             activeInputs = new HashSet<Inputs>();
 
@@ -101,7 +90,7 @@ namespace ProgrammingPlaysCeleste
             On.Monocle.MInput.Update -= UpdateInput;
             GameReader.Unload();
 
-            movementScripts.StandardInput.Write("FINISHED");
+            //movementScripts.StandardInput.Write("FINISHED");
         }
 
         private void UpdateInput(On.Monocle.MInput.orig_Update orig) {
@@ -151,11 +140,11 @@ namespace ProgrammingPlaysCeleste
         }
 
         private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
-            if (Engine.Scene is Level level)
+            /*if (Engine.Scene is Level level)
             {
                 currLevel = level.Session.MapData.Filename;
                 GameReader.FrameUpdate(level);
-                movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
+                //movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
                 GameReader.Cleanup();
 
                 if (!scriptReady) {
@@ -191,7 +180,7 @@ namespace ProgrammingPlaysCeleste
             }
             else {
                 orig(self, gameTime);
-            }
+            }*/
             return;
         }
 
