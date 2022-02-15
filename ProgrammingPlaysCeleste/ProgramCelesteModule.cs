@@ -1,5 +1,4 @@
 ﻿using CliWrap;
-using CliWrap.Buffered;
 using System.Collections.Generic;
 using Celeste;
 using Celeste.Mod;
@@ -29,11 +28,12 @@ namespace ProgrammingPlaysCeleste
 
     public class ProgramCelesteModule : EverestModule
     {
-        static BufferedCommandResult movementScripts;
+        static CommandResult movementScripts;
         CancellationTokenSource cts;
+        StreamWriter inputWriter;
         Stream pythonInput;
-        int inputIndex;
-        int outputIndex = 0;
+        StreamReader outputReader;
+        Stream pythonOutput;
 
         bool scriptReady = false;
 
@@ -67,24 +67,24 @@ namespace ProgrammingPlaysCeleste
             };
         }
 
-        private async void StartProcess() {
+        private void StartProcess() {
             cts = new CancellationTokenSource();
 
             pythonInput = new MemoryStream();
-            PipeSource sourceInput = PipeSource.FromStream(pythonInput, true);
-            inputIndex = 0;
+            inputWriter = new StreamWriter(pythonInput);
+            inputWriter.AutoFlush = true;
+            PipeSource source = PipeSource.FromStream(pythonInput, true);
 
-            outputIndex = 0;
+            pythonOutput = new MemoryStream();
+            outputReader = new StreamReader(pythonOutput);
+            PipeTarget target = PipeTarget.ToStream(pythonOutput);
 
-            movementScripts = await Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithWorkingDirectory(Directory.GetCurrentDirectory()).WithStandardInputPipe(sourceInput).ExecuteBufferedAsync(cts.Token);
+            var cmd = Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithStandardInputPipe(source).WithWorkingDirectory(Directory.GetCurrentDirectory());
+            cmd.WithStandardOutputPipe(target).WithStandardErrorPipe(target);
+            var executed = cmd.ExecuteAsync();
+
+            Logger.Log("Programming Plays Celeste", outputReader.ReadToEnd());
             // The only problem (and maybe a feature to add?) Is that we need a physical window to show what's happening. I'm thinking we create our own window here that mirrors the input and outputs we recieve.
-        }
-
-        private void WriteToInput(string input) {
-            var bytes = Encoding.ASCII.GetBytes(input);
-            var numBytes = Encoding.ASCII.GetByteCount(input);
-            pythonInput.Write(bytes, inputIndex, numBytes);
-            inputIndex += numBytes;
         }
 
         public override void Load() {
@@ -104,7 +104,7 @@ namespace ProgrammingPlaysCeleste
             On.Monocle.MInput.Update -= UpdateInput;
             GameReader.Unload();
 
-            WriteToInput("FINISHED\n");
+            inputWriter.WriteLine("FINISHED");
         }
 
         private void UpdateInput(On.Monocle.MInput.orig_Update orig) {
@@ -158,10 +158,13 @@ namespace ProgrammingPlaysCeleste
             {
                 currLevel = level.Session.MapData.Filename;
                 GameReader.FrameUpdate(level);
-                WriteToInput($"{GameReader.GetJSON()}\n");
+                inputWriter.WriteLine(GameReader.GetJSON());
                 GameReader.Cleanup();
 
-                if (!scriptReady) {
+                pythonOutput.Position = 0;
+                Logger.Log("Programming Plays Celeste", outputReader.ReadToEnd());
+
+                /*if (!scriptReady) {
                     if (movementScripts.StandardOutput.Contains("--READY--")) {
                         scriptReady = true;
                     }
@@ -185,14 +188,12 @@ namespace ProgrammingPlaysCeleste
                     input = input.Replace("\n", "");
                     StringToInput(input);
 
-                    outputIndex = movementScripts.StandardOutput.Length;
-
                     orig(self, gameTime);
                 }
                 else {
                     StringToInput("");
                     orig(self, gameTime);
-                }
+                }*/
             }
             else {
                 orig(self, gameTime);
