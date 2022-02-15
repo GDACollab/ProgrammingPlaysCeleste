@@ -5,11 +5,13 @@ using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
+using System.Runtime.InteropServices;
+using System.IO;
 /*
- * TODO:
- * Figure out some way to execute the local OS terminal instead of python (that way, when python crashes, the terminal stays open)
- * Test this works with Mac and Linux computers
- */
+* TODO:
+* Figure out some way to execute the local OS terminal instead of python (that way, when python crashes, the terminal stays open)
+* Test this works with Mac and Linux computers
+*/
 
 namespace ProgrammingPlaysCeleste
 {
@@ -26,13 +28,6 @@ namespace ProgrammingPlaysCeleste
     public class ProgramCelesteModule : EverestModule
     {
         static Process movementScripts;
-        private readonly ProcessStartInfo movementStartInfo = new ProcessStartInfo("python", @"./Mods/ProgrammingPlaysCeleste/main.py")
-        {
-            UseShellExecute = false,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            CreateNoWindow = false
-        };
 
         bool scriptReady = false;
 
@@ -70,7 +65,30 @@ namespace ProgrammingPlaysCeleste
             On.Monocle.Engine.Update += UpdateGame;
             On.Monocle.MInput.Update += UpdateInput;
 
-            movementScripts = Process.Start(movementStartInfo);
+
+            ProcessStartInfo movementStartInfo;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+                movementStartInfo = new ProcessStartInfo("/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = false,
+                    CreateNoWindow = false
+                };
+
+                movementScripts = Process.Start(movementStartInfo);
+                movementScripts.StandardInput.WriteLine($@"python ./Mods/ProgrammingPlaysCeleste/main.py");
+            } else {
+                movementStartInfo = new ProcessStartInfo("python", "./Mods/ProgrammingPlaysCeleste/main.py")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = false
+                };
+                movementScripts = Process.Start(movementStartInfo);
+            }
 
             activeInputs = new HashSet<Inputs>();
 
