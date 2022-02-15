@@ -31,8 +31,9 @@ namespace ProgrammingPlaysCeleste
     {
         static BufferedCommandResult movementScripts;
         CancellationTokenSource cts;
-        StringBuilder output;
-        StringBuilder input;
+        Stream pythonInput;
+        int inputIndex;
+        int outputIndex = 0;
 
         bool scriptReady = false;
 
@@ -69,8 +70,21 @@ namespace ProgrammingPlaysCeleste
         private async void StartProcess() {
             cts = new CancellationTokenSource();
 
-            movementScripts = await Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithWorkingDirectory(Directory.GetCurrentDirectory()).ExecuteBufferedAsync(cts.Token);
+            pythonInput = new MemoryStream();
+            PipeSource sourceInput = PipeSource.FromStream(pythonInput, true);
+            inputIndex = 0;
+
+            outputIndex = 0;
+
+            movementScripts = await Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithWorkingDirectory(Directory.GetCurrentDirectory()).WithStandardInputPipe(sourceInput).ExecuteBufferedAsync(cts.Token);
             // The only problem (and maybe a feature to add?) Is that we need a physical window to show what's happening. I'm thinking we create our own window here that mirrors the input and outputs we recieve.
+        }
+
+        private void WriteToInput(string input) {
+            var bytes = Encoding.ASCII.GetBytes(input);
+            var numBytes = Encoding.ASCII.GetByteCount(input);
+            pythonInput.Write(bytes, inputIndex, numBytes);
+            inputIndex += numBytes;
         }
 
         public override void Load() {
@@ -90,7 +104,7 @@ namespace ProgrammingPlaysCeleste
             On.Monocle.MInput.Update -= UpdateInput;
             GameReader.Unload();
 
-            //movementScripts.StandardInput.Write("FINISHED");
+            WriteToInput("FINISHED\n");
         }
 
         private void UpdateInput(On.Monocle.MInput.orig_Update orig) {
@@ -140,37 +154,39 @@ namespace ProgrammingPlaysCeleste
         }
 
         private void UpdateGame(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime) {
-            /*if (Engine.Scene is Level level)
+            if (Engine.Scene is Level level)
             {
                 currLevel = level.Session.MapData.Filename;
                 GameReader.FrameUpdate(level);
-                //movementScripts.StandardInput.WriteLine(GameReader.GetJSON());
+                WriteToInput($"{GameReader.GetJSON()}\n");
                 GameReader.Cleanup();
 
                 if (!scriptReady) {
-                    string input = movementScripts.StandardOutput.ReadLine();
-                    if (input.Contains("--READY--")) {
+                    if (movementScripts.StandardOutput.Contains("--READY--")) {
                         scriptReady = true;
                     }
                 }
-                if (!movementScripts.StandardOutput.EndOfStream) // Unless the program has been closed, we continue to read from it:
+                if (scriptReady && movementScripts.StandardOutput.Contains("--START OF INPUT STRING--")) // Unless the program has been closed, we continue to read from it:
                 {
                     // We keep reading until we get the OK from the main.py script:
-                    string input = "";
-                    while (!input.Contains("--START OF INPUT STRING--")) {
-                        input += movementScripts.StandardOutput.ReadLine();
+                    while (!movementScripts.StandardOutput.Contains("--START OF INPUT STRING--")) {
+                        continue;
                     }
 
-                    int inputStartIndex = input.IndexOf("--START OF INPUT STRING--");
-                    string startInput = input.Substring(inputStartIndex);
+                    int inputStartIndex = movementScripts.StandardOutput.IndexOf("--START OF INPUT STRING--");
 
-                    while (!startInput.Contains("--END OF INPUT STRING--")) {
-                        startInput+= movementScripts.StandardOutput.ReadLine();
+                    while (!movementScripts.StandardOutput.Contains("--END OF INPUT STRING--")) {
+                        continue;
                     }
-                    startInput = startInput.Replace("--START OF INPUT STRING--", "");
-                    startInput = startInput.Replace("--END OF INPUT STRING--", "");
-                    startInput = startInput.Replace("\n", "");
-                    StringToInput(startInput);
+                    string input = movementScripts.StandardOutput.Substring(inputStartIndex, movementScripts.StandardOutput.IndexOf("--END OF INPUT STRING--") - inputStartIndex);
+
+                    input = input.Replace("--START OF INPUT STRING--", "");
+                    input = input.Replace("--END OF INPUT STRING--", "");
+                    input = input.Replace("\n", "");
+                    StringToInput(input);
+
+                    outputIndex = movementScripts.StandardOutput.Length;
+
                     orig(self, gameTime);
                 }
                 else {
@@ -180,7 +196,7 @@ namespace ProgrammingPlaysCeleste
             }
             else {
                 orig(self, gameTime);
-            }*/
+            }
             return;
         }
 
