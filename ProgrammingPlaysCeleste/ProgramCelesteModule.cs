@@ -32,7 +32,9 @@ namespace ProgrammingPlaysCeleste
         CancellationTokenSource cts;
         StreamWriter inputWriter;
         Stream pythonInput;
-        StringBuilder pythonOutput;
+        Stream pythonOutput;
+        Stream pythonError;
+        StreamReader outputReader;
 
         bool scriptReady = false;
 
@@ -72,11 +74,13 @@ namespace ProgrammingPlaysCeleste
             pythonInput = new MemoryStream();
             inputWriter = new StreamWriter(pythonInput);
             inputWriter.AutoFlush = true;
-            PipeSource source = PipeSource.FromStream(pythonInput, true);
 
-            pythonOutput = new StringBuilder();
+            pythonOutput = new MemoryStream();
+            outputReader = new StreamReader(pythonOutput);
 
-            var cmd = Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithStandardInputPipe(source).WithWorkingDirectory(Directory.GetCurrentDirectory()) | pythonOutput;
+            //pythonError = new MemoryStream();
+
+            var cmd = pythonInput | Cli.Wrap("python").WithArguments("./Mods/ProgrammingPlaysCeleste/main.py").WithWorkingDirectory(Directory.GetCurrentDirectory()) | (pythonOutput, pythonError);
             var executed = cmd.ExecuteAsync(cts.Token);
 
             // The only problem (and maybe a feature to add?) Is that we need a physical window to show what's happening. I'm thinking we create our own window here that mirrors the input and outputs we recieve.
@@ -156,7 +160,8 @@ namespace ProgrammingPlaysCeleste
                 inputWriter.WriteLine(GameReader.GetJSON());
                 GameReader.Cleanup();
 
-                Logger.Log("Programming Plays Celeste", pythonOutput[pythonOutput.Length - 1].ToString());
+                pythonOutput.Position = 0;
+                Logger.Log("Programming Plays Celeste", outputReader.ReadToEnd());
 
                 /*if (!scriptReady) {
                     if (movementScripts.StandardOutput.Contains("--READY--")) {

@@ -126,7 +126,6 @@ namespace ProgrammingPlaysCeleste
         }
 
         public static void GetLevelData(On.Celeste.Level.orig_LoadLevel orig, Level self, Player.IntroTypes playerIntro, bool isFromLoader) {
-            Logger.Log("Programming Plays Celeste", "GET");
             orig(self, playerIntro, isFromLoader);
             SolidTiles tiles = self.SolidTiles;
             Grid g = tiles.Grid;
@@ -163,14 +162,6 @@ namespace ProgrammingPlaysCeleste
 
             endLevels.ForEach((endLevel) => {
                 EntityData endTrigger = endLevel.Triggers.Find((trigger) => {
-                    Logger.Log("Programming Plays Celeste", trigger.Name + " " + trigger.Has("Event"));
-                    if (trigger.Values != default)
-                    {
-                        foreach (KeyValuePair<string, object> k in trigger.Values)
-                        {
-                            Logger.Log("Programming Plays Celeste", k.Key + " " + k.Value.ToString());
-                        }
-                    }
                     return trigger.Name == "eventTrigger" && trigger.Has("event") && trigger.Attr("event").Contains("end");
                 });
 
