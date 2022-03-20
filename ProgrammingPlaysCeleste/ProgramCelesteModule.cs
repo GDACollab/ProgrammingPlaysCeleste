@@ -5,7 +5,6 @@ using Celeste.Mod;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
-using System.Runtime.InteropServices;
 using System.IO;
 /*
 * TODO:
@@ -68,27 +67,14 @@ namespace ProgrammingPlaysCeleste
 
             ProcessStartInfo movementStartInfo;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-                movementStartInfo = new ProcessStartInfo("/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal")
-                {
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = false,
-                    CreateNoWindow = false
-                };
-
-                movementScripts = Process.Start(movementStartInfo);
-                movementScripts.StandardInput.WriteLine($@"python ./Mods/ProgrammingPlaysCeleste/main.py");
-            } else {
-                movementStartInfo = new ProcessStartInfo("python", "./Mods/ProgrammingPlaysCeleste/main.py")
-                {
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = false
-                };
-                movementScripts = Process.Start(movementStartInfo);
-            }
+            movementStartInfo = new ProcessStartInfo("python", "./Mods/ProgrammingPlaysCeleste/main.py")
+            {
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                CreateNoWindow = false
+            };
+            movementScripts = Process.Start(movementStartInfo);
 
             activeInputs = new HashSet<Inputs>();
 
