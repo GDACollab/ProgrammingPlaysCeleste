@@ -67,7 +67,7 @@ namespace ProgrammingPlaysCeleste
 
             ProcessStartInfo movementStartInfo;
 
-            movementStartInfo = new ProcessStartInfo("python", "./Mods/ProgrammingPlaysCeleste/main.py")
+            movementStartInfo = new ProcessStartInfo("python", "\"" + Directory.GetCurrentDirectory() + @"\Mods\ProgrammingPlaysCeleste\main.py" + "\"")
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
